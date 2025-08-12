@@ -226,23 +226,24 @@ if ($resql) {
         }
         print '</div>';
     } else {
-        print '<div class="seup-alert seup-alert-info" style="margin-top: var(--seup-space-4);">' . $langs->trans('NoTagsAvailable') . '</div>';
+        print '<div class="seup-empty-state" style="margin-top: var(--seup-space-4);">';
+        print '<div class="seup-empty-state-icon">';
+        print '<i class="fas fa-tags"></i>';
+        print '</div>';
+        print '<h3 class="seup-empty-state-title">' . $langs->trans('NoTagsAvailable') . '</h3>';
+        print '<p class="seup-empty-state-description">Dodajte novu oznaku za početak</p>';
+        print '</div>';
     }
 } else {
-    print '<div class="seup-alert seup-alert-warning" style="margin-top: var(--seup-space-4);">' . $langs->trans('ErrorLoadingTags') . '</div>';
+    print '<div class="seup-alert seup-alert-error" style="margin-top: var(--seup-space-4);">' . $langs->trans('ErrorLoadingTags') . '</div>';
 }
 
-// Close HTML content
-$htmlFooter = <<<HTML
-    </div>
-  </div>
-</div>
-HTML;
-
-print $htmlFooter;
+print '</div>'; // End existing tags section
+print '</div>'; // End card body
+print '</div>'; // End card
+print '</div>'; // End container
 
 // Load modern JavaScript
-print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
 // End of page
 llxFooter();

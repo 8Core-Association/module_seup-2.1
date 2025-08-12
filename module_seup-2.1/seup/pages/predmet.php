@@ -312,6 +312,10 @@ print '</div>
 // Bootstrap JS
 print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
 
+// Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
+print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
+
 ?>
 
 <input type="hidden" name="token" value="<?php echo newToken(); ?>">

@@ -183,28 +183,5 @@ print '<div class="d-flex justify-content-between align-items-center mb-4">';
 print '<h4 class="mb-0">' . $langs->trans('ClassificationMarks') . '</h4>';
 print '<button type="button" class="btn btn-primary btn-sm" id="novaOznakaBtn">';
 print '<i class="fas fa-plus me-1"></i> ' . $langs->trans('NewClassificationMark'); // TODO napravi link na Postavke
-print '</button>';
-print '</div>';
-print $tableHTML;
-print '<div class="mt-3 d-flex justify-content-between">';
-print '<div class="text-muted small">';
-print '<i class="fas fa-info-circle me-1"></i> ' . $langs->trans('ShowingMarks', count($oznake));
-print '</div>';
-print '</div>';
-print '</div>'; // p-3 border rounded
-print '</div>'; // container
-
-// Bootstrap JS
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
-?>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById("novaOznakaBtn").addEventListener("click", function() {
-            window.location.href = "nova_oznaka.php";
-        });
-    });
-</script>
-
-<?php
 llxFooter();
 $db->close();

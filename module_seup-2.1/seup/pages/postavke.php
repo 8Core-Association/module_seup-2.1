@@ -61,33 +61,23 @@ if (!$res && file_exists("../../../main.inc.php")) {
 }
 if (!$res) {
   die("Include of main fails");
-}
+require_once __DIR__ . '/../class/klasifikacijska_oznaka.class.php';
+require_once __DIR__ . '/../class/oznaka_ustanove.class.php';
+require_once __DIR__ . '/../class/interna_oznaka_korisnika.class.php';
 
 // Omoguci debugiranje php skripti
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 
-if ($res) {
-  // include Form class za token
-  if (file_exists("../../../core/class/html.form.class.php")) {
-    if (!dol_include_once('/core/class/html.form.class.php')) {
-      die("Include of form fails");
-    }
-  }
-} else {
-  die("Error: Unable to include main.inc.php");
-}
 // Učitaj prijevode
 $langs->loadLangs(array("seup@seup"));
 
 $action = GETPOST('action', 'aZ09');
-
 $now = dol_now();
 $max = getDolGlobalInt('MAIN_SIZE_SHORTLIST_LIMIT', 5);
-ob_start(); // Kontrolira buffer
+
 // Sigurnosne provjere
 $socid = GETPOST('socid', 'int');
 if (isset($user->socid) && $user->socid > 0) {
@@ -95,11 +85,7 @@ if (isset($user->socid) && $user->socid > 0) {
   $socid = $user->socid;
 }
 
-/*
- * View
- */
 $form = new Form($db);
-
 $formfile = new FormFile($db);
 
 llxHeader("", "", '', '', 0, 0, '', '', '', 'mod-seup page-index');
@@ -121,9 +107,6 @@ print '<span>Postavke</span>';
 print '</div>';
 print '</div>';
 print '</div>';
-require_once __DIR__ . '/../class/klasifikacijska_oznaka.class.php';
-require_once __DIR__ . '/../class/oznaka_ustanove.class.php';
-require_once __DIR__ . '/../class/interna_oznaka_korisnika.class.php';
 
 // Import JS skripti
 global $hookmanager;
