@@ -1499,9 +1499,9 @@ body {
   border-radius: var(--seup-radius-lg);
   padding: var(--seup-space-4);
   transition: var(--seup-transition);
-  cursor: pointer;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--seup-shadow-sm);
 }
 
 .seup-tag-card::before {
@@ -1511,7 +1511,7 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--seup-primary-500), var(--seup-accent));
+  background: var(--seup-primary-500);
   opacity: 0;
   transition: var(--seup-transition);
 }
@@ -1523,6 +1523,7 @@ body {
 .seup-tag-card:hover {
   border-color: var(--seup-primary-300);
   box-shadow: var(--seup-shadow-lg);
+  transform: translateY(-2px);
 }
 
 .seup-tag-card-header {
@@ -1582,7 +1583,7 @@ body {
 
 .seup-usage-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--seup-success), var(--seup-accent));
+  background: var(--seup-primary-500);
   border-radius: var(--seup-radius);
   transition: width 0.5s ease;
 }
@@ -1590,6 +1591,7 @@ body {
 .seup-usage-text {
   font-size: 0.75rem;
   color: var(--seup-gray-500);
+  font-weight: 500;
 }
 
 .seup-tag-count {

@@ -188,6 +188,27 @@ if ($resql_stats && $obj = $db->fetch_object($resql_stats)) {
     $total_tags = $obj->total_tags;
 }
 
+// Get usage statistics for tags
+$sql_usage = "SELECT 
+    t.rowid,
+    t.tag,
+    COUNT(pt.fk_predmet) as usage_count
+FROM " . MAIN_DB_PREFIX . "a_tagovi t
+LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
+WHERE t.entity = " . $conf->entity . "
+GROUP BY t.rowid, t.tag";
+
+$resql_usage = $db->query($sql_usage);
+$tag_usage = [];
+if ($resql_usage) {
+    while ($obj = $db->fetch_object($resql_usage)) {
+        $tag_usage[$obj->rowid] = $obj->usage_count;
+    }
+}
+
+// Get active tags count (tags that are actually used)
+$active_tags = count(array_filter($tag_usage, function($count) { return $count > 0; }));
+
 // Total Tags Card
 print '<div class="seup-card seup-interactive">';
 print '<div class="seup-card-body">';
@@ -211,7 +232,7 @@ print '<div class="seup-icon-lg" style="color: var(--seup-success);">';
 print '<i class="fas fa-chart-line"></i>';
 print '</div>';
 print '<div>';
-print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">Aktivne</h3>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . $active_tags . '</h3>';
 print '<p class="seup-text-small">Oznake u upotrebi</p>';
 print '</div>';
 print '</div>';
@@ -320,8 +341,9 @@ print '</div>';
 print '</div>';
 
 // Display existing tags
-$sql = "SELECT rowid, tag, date_creation, fk_user_creat";
+$sql = "SELECT t.rowid, t.tag, t.date_creation, t.fk_user_creat, u.firstname, u.lastname";
 $sql .= " FROM " . MAIN_DB_PREFIX . "a_tagovi";
+$sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "user u ON t.fk_user_creat = u.rowid";
 $sql .= " WHERE entity = " . $conf->entity;
 $sql .= " ORDER BY date_creation DESC";
 
@@ -338,6 +360,10 @@ if ($resql) {
         while ($obj = $db->fetch_object($resql)) {
             $color = $colors[$colorIndex % count($colors)];
             $colorIndex++;
+            
+            // Get real usage count for this tag
+            $usage_count = isset($tag_usage[$obj->rowid]) ? $tag_usage[$obj->rowid] : 0;
+            $usage_percentage = $total_tags > 0 ? min(($usage_count / max($total_tags, 1)) * 100, 100) : 0;
             
             print '<div class="seup-tag-card seup-interactive seup-fade-in" data-tag="' . strtolower($obj->tag) . '">';
             print '<div class="seup-tag-card-header">';
@@ -365,18 +391,30 @@ if ($resql) {
             print '<i class="fas fa-calendar-alt"></i>';
             print '<span>Kreiran: ' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
             print '</div>';
+            if ($obj->firstname || $obj->lastname) {
+                print '<div class="seup-meta-item">';
+                print '<i class="fas fa-user"></i>';
+                print '<span>Kreator: ' . trim($obj->firstname . ' ' . $obj->lastname) . '</span>';
+                print '</div>';
+            }
             print '<div class="seup-meta-item">';
-            print '<i class="fas fa-user"></i>';
+            print '<i class="fas fa-hashtag"></i>';
             print '<span>ID: #' . $obj->rowid . '</span>';
             print '</div>';
             print '</div>';
             
-            // Usage stats (placeholder for now)
+            // Real usage stats
             print '<div class="seup-tag-usage">';
             print '<div class="seup-usage-bar">';
-            print '<div class="seup-usage-fill" style="width: ' . rand(10, 90) . '%;"></div>';
+            print '<div class="seup-usage-fill" style="width: ' . $usage_percentage . '%;"></div>';
             print '</div>';
-            print '<span class="seup-usage-text">Koristi se u ' . rand(1, 15) . ' predmeta</span>';
+            print '<span class="seup-usage-text">';
+            if ($usage_count > 0) {
+                print 'Koristi se u ' . $usage_count . ' predmet' . ($usage_count == 1 ? 'u' : 'a');
+            } else {
+                print 'Nije korišten';
+            }
+            print '</span>';
             print '</div>';
             print '</div>';
             
@@ -459,6 +497,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = true;
             }
         });
+        
+        // Initial state check
+        tagInput.dispatchEvent(new Event('input'));
     }
     
     // Color picker functionality
@@ -519,8 +560,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const addTagForm = document.getElementById('addTagForm');
     if (addTagForm) {
         addTagForm.addEventListener('submit', function() {
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Dodajem...</span>';
-            submitBtn.disabled = true;
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Dodajem...</span>';
+                submitBtn.disabled = true;
+            }
         });
     }
     
