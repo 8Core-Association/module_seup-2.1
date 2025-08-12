@@ -147,6 +147,29 @@ if ($action == 'deletetag') {
     }
 }
 
+// Get real statistics from database
+$totalTags = 0;
+$activeTags = 0;
+
+// Count total tags
+$sql = "SELECT COUNT(*) as total FROM " . MAIN_DB_PREFIX . "a_tagovi WHERE entity = " . $conf->entity;
+$resql = $db->query($sql);
+if ($resql) {
+    $obj = $db->fetch_object($resql);
+    $totalTags = $obj->total;
+}
+
+// Count tags that are actually used
+$sql = "SELECT COUNT(DISTINCT t.rowid) as active 
+        FROM " . MAIN_DB_PREFIX . "a_tagovi t
+        INNER JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
+        WHERE t.entity = " . $conf->entity;
+$resql = $db->query($sql);
+if ($resql) {
+    $obj = $db->fetch_object($resql);
+    $activeTags = $obj->active;
+}
+
 /*
  * View
  */
@@ -154,97 +177,334 @@ if ($action == 'deletetag') {
 $form = new Form($db);
 $formfile = new FormFile($db);
 
-// Set page title to "Tagovi"
 llxHeader("", $langs->trans("Tagovi"), '', '', 0, 0, '', '', '', 'mod-seup page-tagovi');
 
-// === BOOTSTRAP CDN ===
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">';
-
-// Font Awesome za ikone
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-// Main content using HEREDOC syntax
-$htmlContent = <<<HTML
-<div class="container mt-3">
-  <div class="shadow-sm p-4 bg-body rounded">
-    <div class="text-center mb-4">
-      <h2 class="mb-2"><i class="fas fa-tags me-2"></i>{$langs->trans("Tagovi")}</h2>
-      <p class="lead mb-3">Upravljanje oznakama za dokumente i predmete</p>
-    </div>
-    
-    <form method="POST" action="" class="mt-2">
-      <input type="hidden" name="action" value="addtag">
-      <div class="mb-3">
-        <label for="tag" class="form-label">{$langs->trans('Tag')}</label>
-        <div class="input-group">
-          <input type="text" name="tag" id="tag" class="form-control" 
-                 placeholder="{$langs->trans('UnesiNoviTag')}" 
-                 value="{$tag_name}" required>
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>
-            {$langs->trans('DodajTag')}
-          </button>
-        </div>
-        <div class="form-text mt-2">{$langs->trans('TagoviHelpText')}</div>
-      </div>
-    </form>
-    
-    <div class="mt-4">
-      <h4 class="mb-3">{$langs->trans('ExistingTags')}</h4>
-HTML;
+// Page Header
+print '<div class="seup-page-header">';
+print '<div class="seup-container">';
+print '<h1 class="seup-page-title">Upravljanje Oznakama</h1>';
+print '<div class="seup-breadcrumb">';
+print '<a href="../seupindex.php">SEUP</a>';
+print '<i class="fas fa-chevron-right"></i>';
+print '<span>Tagovi</span>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-print $htmlContent;
+print '<div class="seup-container">';
 
-// Display existing tags
-$sql = "SELECT rowid, tag, date_creation";
-$sql .= " FROM " . MAIN_DB_PREFIX . "a_tagovi";
-$sql .= " WHERE entity = " . $conf->entity;
-$sql .= " ORDER BY tag ASC";
+// Stats Cards
+print '<div class="seup-grid seup-grid-3 seup-mb-8">';
+
+// Total Tags Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-primary-600);">';
+print '<i class="fas fa-tags"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . $totalTags . '</h3>';
+print '<p class="seup-text-small">Ukupno Oznaka</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+// Active Tags Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-success);">';
+print '<i class="fas fa-check-circle"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . $activeTags . '</h3>';
+print '<p class="seup-text-small">Aktivne Oznake</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+// Quick Actions Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-accent);">';
+print '<i class="fas fa-plus"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">Brze Akcije</h3>';
+print '<p class="seup-text-small">Dodaj novu oznaku</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+print '</div>'; // End stats grid
+
+// Main Content
+print '<div class="seup-grid seup-grid-2">';
+
+// Left Column - Add New Tag Form
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h3 class="seup-heading-4" style="margin: 0;">Dodaj Novu Oznaku</h3>';
+print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Kreirajte novu oznaku za kategorizaciju</p>';
+print '</div>';
+print '<div class="seup-card-body">';
+
+print '<form method="POST" action="' . $_SERVER['PHP_SELF'] . '" id="tagForm">';
+print '<input type="hidden" name="action" value="addtag">';
+print '<input type="hidden" name="token" value="' . newToken() . '">';
+
+print '<div class="seup-form-group">';
+print '<label for="tag" class="seup-label">Naziv Oznake</label>';
+print '<div class="seup-input-group">';
+print '<input type="text" name="tag" id="tag" class="seup-input seup-input-enhanced" placeholder="Unesite naziv oznake..." value="' . dol_escape_htmltag($tag_name) . '" required maxlength="50">';
+print '<i class="fas fa-tag seup-input-icon"></i>';
+print '</div>';
+print '<div class="seup-char-counter" id="charCounter">0/50</div>';
+print '</div>';
+
+print '<div class="seup-help-text">';
+print '<i class="fas fa-info-circle"></i> ' . $langs->trans('TagoviHelpText');
+print '</div>';
+
+print '<div class="seup-form-actions">';
+print '<button type="submit" class="seup-btn seup-btn-primary seup-interactive" id="submitBtn">';
+print '<i class="fas fa-plus"></i> ' . $langs->trans('DodajTag');
+print '</button>';
+print '<button type="reset" class="seup-btn seup-btn-secondary">';
+print '<i class="fas fa-undo"></i> Resetiraj';
+print '</button>';
+print '</div>';
+
+print '</form>';
+print '</div>';
+print '</div>';
+
+// Right Column - Existing Tags
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h3 class="seup-heading-4" style="margin: 0;">' . $langs->trans('ExistingTags') . '</h3>';
+print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Pregled postojećih oznaka u sustavu</p>';
+print '</div>';
+print '<div class="seup-card-body">';
+
+// Search input
+print '<div class="seup-form-group">';
+print '<div class="seup-input-group">';
+print '<input type="text" id="searchTags" class="seup-input seup-input-enhanced" placeholder="Pretraži oznake...">';
+print '<i class="fas fa-search seup-input-icon"></i>';
+print '</div>';
+print '</div>';
+
+// Display existing tags with real data
+$sql = "SELECT t.rowid, t.tag, t.date_creation, u.firstname, u.lastname,
+               COUNT(pt.fk_predmet) as usage_count
+        FROM " . MAIN_DB_PREFIX . "a_tagovi t
+        LEFT JOIN " . MAIN_DB_PREFIX . "user u ON t.fk_user_creat = u.rowid
+        LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
+        WHERE t.entity = " . $conf->entity . "
+        GROUP BY t.rowid, t.tag, t.date_creation, u.firstname, u.lastname
+        ORDER BY t.tag ASC";
 
 $resql = $db->query($sql);
 if ($resql) {
     $num = $db->num_rows($resql);
-    $trans_confirm = $langs->trans('ConfirmDeleteTag');
-
+    
     if ($num > 0) {
-        print '<div class="seup-flex" style="flex-wrap: wrap; gap: var(--seup-space-3); margin-top: var(--seup-space-4);">';
+        print '<div class="seup-tags-grid" id="tagsContainer">';
+        
         while ($obj = $db->fetch_object($resql)) {
-            print '<div class="seup-tag seup-tag-removable seup-interactive">';
-            print '<span>' . $obj->tag . '</span>';
-
-            // Delete button with confirmation
-            print '<form method="POST" action="" style="display:inline;">';
+            $creatorName = dolGetFirstLastname($obj->firstname, $obj->lastname);
+            $usageCount = (int)$obj->usage_count;
+            
+            print '<div class="seup-tag-card seup-interactive" data-tag="' . strtolower($obj->tag) . '">';
+            
+            print '<div class="seup-tag-card-header">';
+            print '<div class="seup-tag seup-tag-primary">';
+            print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
+            print '</div>';
+            print '<div class="seup-tag-actions">';
+            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi">';
+            print '<i class="fas fa-edit"></i>';
+            print '</button>';
+            
+            // Delete form
+            print '<form method="POST" action="" style="display:inline;" onsubmit="return confirm(\'' . dol_escape_js($langs->trans('ConfirmDeleteTag')) . '\')">';
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
-            print '<button type="submit" class="seup-tag-remove" onclick="return confirm(\'' . dol_escape_js($trans_confirm) . '\')">';
+            print '<input type="hidden" name="token" value="' . newToken() . '">';
+            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši">';
             print '<i class="fas fa-trash"></i>';
             print '</button>';
             print '</form>';
-
+            
             print '</div>';
+            print '</div>';
+            
+            print '<div class="seup-tag-card-body">';
+            print '<div class="seup-tag-meta">';
+            print '<div class="seup-meta-item">';
+            print '<i class="fas fa-calendar"></i>';
+            print '<span>' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
+            print '</div>';
+            print '<div class="seup-meta-item">';
+            print '<i class="fas fa-user"></i>';
+            print '<span>' . ($creatorName ?: 'Nepoznato') . '</span>';
+            print '</div>';
+            print '<div class="seup-meta-item">';
+            print '<i class="fas fa-hashtag"></i>';
+            print '<span>ID: ' . $obj->rowid . '</span>';
+            print '</div>';
+            print '</div>';
+            
+            print '<div class="seup-tag-usage">';
+            print '<div class="seup-usage-text">';
+            print '<span>Koristi se u ' . $usageCount . ' predmeta</span>';
+            print '</div>';
+            print '<div class="seup-usage-bar">';
+            $percentage = $totalTags > 0 ? min(($usageCount / max($totalTags, 1)) * 100, 100) : 0;
+            print '<div class="seup-usage-fill" style="width: ' . $percentage . '%;"></div>';
+            print '</div>';
+            print '</div>';
+            
+            print '</div>'; // End card body
+            print '</div>'; // End card
         }
-        print '</div>';
+        
+        print '</div>'; // End tags grid
     } else {
-        print '<div class="seup-alert seup-alert-info" style="margin-top: var(--seup-space-4);">' . $langs->trans('NoTagsAvailable') . '</div>';
+        print '<div class="seup-empty-state">';
+        print '<div class="seup-empty-state-icon">';
+        print '<i class="fas fa-tags"></i>';
+        print '</div>';
+        print '<h3 class="seup-empty-state-title">' . $langs->trans('NoTagsAvailable') . '</h3>';
+        print '<p class="seup-empty-state-description">Dodajte prvu oznaku koristeći formu lijevo</p>';
+        print '</div>';
     }
 } else {
-    print '<div class="seup-alert seup-alert-warning" style="margin-top: var(--seup-space-4);">' . $langs->trans('ErrorLoadingTags') . '</div>';
+    print '<div class="seup-alert seup-alert-error">';
+    print '<i class="fas fa-exclamation-triangle"></i> ' . $langs->trans('ErrorLoadingTags');
+    print '</div>';
 }
 
-// Close HTML content
-$htmlFooter = <<<HTML
-    </div>
-  </div>
-</div>
-HTML;
+print '</div>'; // End right column card body
+print '</div>'; // End right column card
 
-print $htmlFooter;
+print '</div>'; // End main grid
+print '</div>'; // End container
 
 // Load modern JavaScript
 print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
-// End of page
+?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter
+    const tagInput = document.getElementById('tag');
+    const charCounter = document.getElementById('charCounter');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (tagInput && charCounter) {
+        function updateCharCounter() {
+            const length = tagInput.value.length;
+            charCounter.textContent = length + '/50';
+            
+            // Change color based on length
+            if (length < 2) {
+                charCounter.style.color = 'var(--seup-error)';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+            } else if (length > 45) {
+                charCounter.style.color = 'var(--seup-warning)';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('disabled');
+            } else {
+                charCounter.style.color = 'var(--seup-success)';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('disabled');
+            }
+        }
+        
+        tagInput.addEventListener('input', updateCharCounter);
+        updateCharCounter(); // Initial call
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchTags');
+    const tagCards = document.querySelectorAll('.seup-tag-card');
+    
+    if (searchInput && tagCards.length > 0) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            tagCards.forEach(card => {
+                const tagName = card.getAttribute('data-tag');
+                const matches = tagName.includes(searchTerm);
+                
+                if (matches) {
+                    card.style.display = 'block';
+                    card.classList.add('seup-fade-in');
+                } else {
+                    card.style.display = 'none';
+                    card.classList.remove('seup-fade-in');
+                }
+            });
+        });
+    }
+    
+    // Form submission with loading state
+    const tagForm = document.getElementById('tagForm');
+    if (tagForm) {
+        tagForm.addEventListener('submit', function() {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dodajem...';
+            submitBtn.disabled = true;
+        });
+    }
+    
+    // Enhanced hover effects for tag cards
+    tagCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = 'var(--seup-shadow-lg)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'var(--seup-shadow)';
+        });
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + N for new tag
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            tagInput.focus();
+        }
+        
+        // Escape to clear search
+        if (e.key === 'Escape') {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        }
+    });
+});
+</script>
+
+<?php
+
 llxFooter();
 $db->close();
-
