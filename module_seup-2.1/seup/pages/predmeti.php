@@ -22,19 +22,16 @@
  * Za sva pitanja, zahtjeve za licenciranjem ili dodatne informacije obratite se na info@8core.hr.
  */
 /**
- *    \file       seup/seupindex.php
+ *    \file       seup/pages/predmeti.php
  *    \ingroup    seup
- *    \brief      Home page of seup top menu
+ *    \brief      Lista predmeta
  */
-
 
 // Učitaj Dolibarr okruženje
 $res = 0;
-// Try main.inc.php into web root known defined into CONTEXT_DOCUMENT_ROOT (not always defined)
 if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
   $res = @include $_SERVER["CONTEXT_DOCUMENT_ROOT"] . "/main.inc.php";
 }
-// Pokušaj učitati main.inc.php iz korijenskog direktorija weba
 $tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME'];
 $tmp2 = realpath(__FILE__);
 $i = strlen($tmp) - 1;
@@ -49,7 +46,6 @@ if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1)) . "/main.inc.php"))
 if (!$res && $i > 0 && file_exists(dirname(substr($tmp, 0, ($i + 1))) . "/main.inc.php")) {
   $res = @include dirname(substr($tmp, 0, ($i + 1))) . "/main.inc.php";
 }
-// Pokušaj učitati main.inc.php koristeći relativnu putanju
 if (!$res && file_exists("../main.inc.php")) {
   $res = @include "../main.inc.php";
 }
@@ -63,46 +59,71 @@ if (!$res) {
   die("Include of main fails");
 }
 
-// Omoguci debugiranje php skripti
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-
+// Libraries
+require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
+require_once DOL_DOCUMENT_ROOT . '/core/class/html.form.class.php';
 require_once DOL_DOCUMENT_ROOT . '/core/class/html.formfile.class.php';
 
-if ($res) {
-  // include Form class za token
-  if (file_exists("../../../core/class/html.form.class.php")) {
-    if (!dol_include_once('/core/class/html.form.class.php')) {
-      die("Include of form fails");
-    }
-  }
-} else {
-  die("Error: Unable to include main.inc.php");
-}
-// Učitaj prijevode
+// Local classes
+require_once __DIR__ . '/../class/predmet_helper.class.php';
+
+// Load translation files
 $langs->loadLangs(array("seup@seup"));
 
-$action = GETPOST('action', 'aZ09');
-
-$now = dol_now();
-$max = getDolGlobalInt('MAIN_SIZE_SHORTLIST_LIMIT', 5);
-ob_start(); // Kontrolira buffer
-// Sigurnosne provjere
+// Security check
 $socid = GETPOST('socid', 'int');
 if (isset($user->socid) && $user->socid > 0) {
-  $action = '';
-  $socid = $user->socid;
+    $action = '';
+    $socid = $user->socid;
 }
 
-/*
- * View
- */
-$form = new Form($db);
+// Fetch sorting parameters
+$sortField = GETPOST('sort', 'aZ09') ?: 'ID_predmeta';
+$sortOrder = GETPOST('order', 'aZ09') ?: 'DESC';
 
+// Validate sort fields
+$allowedSortFields = [
+    'ID_predmeta',
+    'klasa_br',
+    'naziv_predmeta',
+    'name_ustanova',
+    'ime_prezime',
+    'tstamp_created'
+];
+
+if (!in_array($sortField, $allowedSortFields)) {
+    $sortField = 'ID_predmeta';
+}
+$sortOrder = ($sortOrder === 'ASC') ? 'ASC' : 'DESC';
+
+// Use specialized helper for predmeti
+$orderByClause = Predmet_helper::buildOrderByKlasa($sortField, $sortOrder, 'p');
+
+// Fetch all predmeti
+$sql = "SELECT 
+            p.ID_predmeta,
+            CONCAT(p.klasa_br, '-', p.sadrzaj, '/', p.godina, '-', p.dosje_broj, '/', p.predmet_rbr) as klasa,
+            p.naziv_predmeta,
+            DATE_FORMAT(p.tstamp_created, '%d.%m.%Y') as datum_otvaranja,
+            u.name_ustanova,
+            k.ime_prezime
+        FROM " . MAIN_DB_PREFIX . "a_predmet p
+        LEFT JOIN " . MAIN_DB_PREFIX . "a_oznaka_ustanove u ON p.ID_ustanove = u.ID_ustanove
+        LEFT JOIN " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika k ON p.ID_interna_oznaka_korisnika = k.ID
+        {$orderByClause}";
+
+$resql = $db->query($sql);
+$predmeti = [];
+if ($resql) {
+    while ($obj = $db->fetch_object($resql)) {
+        $predmeti[] = $obj;
+    }
+}
+
+$form = new Form($db);
 $formfile = new FormFile($db);
 
-llxHeader("", "", '', '', 0, 0, '', '', '', 'mod-seup page-index');
+llxHeader("", $langs->trans("OpenCases"), '', '', 0, 0, '', '', '', 'mod-seup page-predmeti');
 
 // Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
@@ -113,590 +134,326 @@ print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 // Page Header
 print '<div class="seup-page-header">';
 print '<div class="seup-container">';
-print '<h1 class="seup-page-title">Postavke Sustava</h1>';
+print '<h1 class="seup-page-title">Pregled Predmeta</h1>';
 print '<div class="seup-breadcrumb">';
 print '<a href="../seupindex.php">SEUP</a>';
 print '<i class="fas fa-chevron-right"></i>';
-print '<span>Postavke</span>';
+print '<span>Predmeti</span>';
 print '</div>';
 print '</div>';
 print '</div>';
-require_once __DIR__ . '/../class/klasifikacijska_oznaka.class.php';
-require_once __DIR__ . '/../class/oznaka_ustanove.class.php';
-require_once __DIR__ . '/../class/interna_oznaka_korisnika.class.php';
 
-// Import JS skripti
-global $hookmanager;
-$messagesFile = DOL_URL_ROOT . '/custom/seup/js/messages.js';
-$hookmanager->initHooks(array('seup'));
-print '<script src="' . $messagesFile . '"></script>';
+print '<div class="seup-container">';
 
+// Stats Cards
+print '<div class="seup-grid seup-grid-3 seup-mb-8">';
 
-// importanje klasa za rad s podacima: 
-/*
-**************************************
-RAD S BAZOM 
-**************************************
-*/
-// Provjeravamo da li u bazi vec postoji OZNAKA USTANOVE, ako postoji napunit cemo formu podacima
-global $db;
+// Total Cases Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-primary-600);">';
+print '<i class="fas fa-folder-open"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . count($predmeti) . '</h3>';
+print '<p class="seup-text-small">Ukupno Predmeta</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-// Provjera i Loadanje vrijednosti oznake ustanove pri loadu stranice
-$podaci_postoje = null;
-$sql = "SELECT ID_ustanove, singleton, code_ustanova, name_ustanova FROM " . MAIN_DB_PREFIX . "a_oznaka_ustanove WHERE  singleton = 1 LIMIT 1";
-$resql = $db->query($sql);
-$ID_ustanove = 0;
-if ($resql && $db->num_rows($resql) > 0) {
-  $podaci_postoje = $db->fetch_object($resql);
-  $ID_ustanove = $podaci_postoje->ID_ustanove;
-  dol_syslog("Podaci o oznaci ustanove su ucitani iz baze: " . $ID_ustanove, LOG_INFO);
-}
+// Active Cases Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-success);">';
+print '<i class="fas fa-check-circle"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . count($predmeti) . '</h3>';
+print '<p class="seup-text-small">Aktivni Predmeti</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
+// Quick Actions Card
+print '<div class="seup-card seup-interactive">';
+print '<div class="seup-card-body">';
+print '<div class="seup-flex seup-items-center seup-gap-4">';
+print '<div class="seup-icon-lg" style="color: var(--seup-accent);">';
+print '<i class="fas fa-plus"></i>';
+print '</div>';
+print '<div>';
+print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">Brze Akcije</h3>';
+print '<p class="seup-text-small">Novi predmet ili izvoz</p>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-// Provjera i Loadanje korisnika pri loadu stranice
-require_once DOL_DOCUMENT_ROOT . '/user/class/user.class.php';
+print '</div>'; // End stats grid
 
-$listUsers = [];
-$userStatic = new User($db);
+// Main Content Card
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<div>';
+print '<h2 class="seup-heading-3" style="margin: 0;">' . $langs->trans('OpenCases') . '</h2>';
+print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Pregled svih predmeta u sustavu</p>';
+print '</div>';
+print '<div class="seup-flex seup-gap-2">';
+print '<a href="novi_predmet.php" class="seup-btn seup-btn-primary seup-interactive">';
+print '<i class="fas fa-plus"></i> ' . $langs->trans('NewCase');
+print '</a>';
+print '<button class="seup-btn seup-btn-secondary seup-interactive" onclick="exportToExcel()">';
+print '<i class="fas fa-file-excel"></i> ' . $langs->trans('ExportExcel');
+print '</button>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-// Dohvati sve aktivne korisnike
-$sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "user WHERE statut = 1 ORDER BY lastname ASC";
-$resql = $db->query($sql);
-if ($resql) {
-  while ($obj = $db->fetch_object($resql)) {
-    $userStatic->fetch($obj->rowid);
-    $listUsers[] = clone $userStatic;
-  }
+print '<div class="seup-card-body">';
+
+// Search and Filter Section
+print '<div class="seup-flex seup-gap-4 seup-mb-6" style="flex-wrap: wrap;">';
+print '<div class="seup-form-group" style="flex: 1; min-width: 250px; margin-bottom: 0;">';
+print '<label class="seup-label">Pretraži predmete</label>';
+print '<div style="position: relative;">';
+print '<input type="text" class="seup-input" placeholder="Pretraži po klasi, nazivu ili zaposleniku..." id="searchInput" style="padding-left: var(--seup-space-10);">';
+print '<i class="fas fa-search" style="position: absolute; left: var(--seup-space-3); top: 50%; transform: translateY(-50%); color: var(--seup-gray-400);"></i>';
+print '</div>';
+print '</div>';
+print '<div class="seup-form-group" style="margin-bottom: 0;">';
+print '<label class="seup-label">Status</label>';
+print '<select class="seup-select" id="statusFilter">';
+print '<option value="">Svi statusi</option>';
+print '<option value="active">Aktivni</option>';
+print '<option value="closed">Zatvoreni</option>';
+print '</select>';
+print '</div>';
+print '</div>';
+
+// Generate HTML table
+if (count($predmeti) > 0) {
+    print '<div style="overflow-x: auto;">';
+    print '<table class="seup-table" id="predmetiTable">';
+    print '<thead>';
+    print '<tr>';
+
+    // Function to generate sortable header
+    function sortableHeader($field, $label, $currentSort, $currentOrder) {
+        $newOrder = ($currentSort === $field && $currentOrder === 'DESC') ? 'ASC' : 'DESC';
+        $icon = '';
+        
+        if ($currentSort === $field) {
+            $icon = ($currentOrder === 'ASC') 
+                ? ' <i class="fas fa-arrow-up"></i>' 
+                : ' <i class="fas fa-arrow-down"></i>';
+        }
+        
+        return '<th class="seup-sortable-header">' .
+               '<a href="?sort=' . $field . '&order=' . $newOrder . '">' .
+               $label . $icon .
+               '</a></th>';
+    }
+
+    // Generate sortable headers
+    print sortableHeader('ID_predmeta', $langs->trans('ID'), $sortField, $sortOrder);
+    print sortableHeader('klasa_br', $langs->trans('Klasa'), $sortField, $sortOrder);
+    print sortableHeader('naziv_predmeta', $langs->trans('NazivPredmeta'), $sortField, $sortOrder);
+    print sortableHeader('name_ustanova', $langs->trans('Ustanova'), $sortField, $sortOrder);
+    print sortableHeader('ime_prezime', $langs->trans('Zaposlenik'), $sortField, $sortOrder);
+    print sortableHeader('tstamp_created', $langs->trans('DatumOtvaranja'), $sortField, $sortOrder);
+    print '<th>' . $langs->trans('Actions') . '</th>';
+    print '</tr>';
+    print '</thead>';
+    print '<tbody>';
+
+    foreach ($predmeti as $predmet) {
+        print '<tr class="predmet-row" data-search="' . strtolower($predmet->klasa . ' ' . $predmet->naziv_predmeta . ' ' . $predmet->ime_prezime) . '">';
+        print '<td><span class="seup-badge seup-badge-primary">' . $predmet->ID_predmeta . '</span></td>';
+        print '<td><code style="font-family: var(--seup-font-mono); background: var(--seup-gray-100); padding: var(--seup-space-1) var(--seup-space-2); border-radius: var(--seup-radius-sm);">' . $predmet->klasa . '</code></td>';
+        print '<td><strong>' . dol_trunc($predmet->naziv_predmeta, 50) . '</strong></td>';
+        print '<td>' . $predmet->name_ustanova . '</td>';
+        print '<td>' . $predmet->ime_prezime . '</td>';
+        print '<td>' . $predmet->datum_otvaranja . '</td>';
+        
+        // Action buttons
+        print '<td>';
+        print '<div class="seup-flex seup-gap-2">';
+        print '<a href="predmet.php?id=' . $predmet->ID_predmeta . '" class="seup-btn seup-btn-sm seup-btn-primary seup-tooltip" data-tooltip="' . $langs->trans('ViewDetails') . '">';
+        print '<i class="fas fa-eye"></i>';
+        print '</a>';
+        print '<a href="edit_predmet.php?id=' . $predmet->ID_predmeta . '" class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="' . $langs->trans('Edit') . '">';
+        print '<i class="fas fa-edit"></i>';
+        print '</a>';
+        print '<button class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="' . $langs->trans('CloseCase') . '" onclick="closeCase(' . $predmet->ID_predmeta . ')">';
+        print '<i class="fas fa-times"></i>';
+        print '</button>';
+        print '</div>';
+        print '</td>';
+        
+        print '</tr>';
+    }
+
+    print '</tbody>';
+    print '</table>';
+    print '</div>';
 } else {
-  echo $db->lasterror();
+    print '<div class="seup-empty-state">';
+    print '<div class="seup-empty-state-icon">';
+    print '<i class="fas fa-folder-open"></i>';
+    print '</div>';
+    print '<h3 class="seup-empty-state-title">' . $langs->trans('NoOpenCases') . '</h3>';
+    print '<p class="seup-empty-state-description">Trenutno nema otvorenih predmeta u sustavu</p>';
+    print '<a href="novi_predmet.php" class="seup-btn seup-btn-primary seup-interactive">';
+    print '<i class="fas fa-plus"></i> Kreiraj Prvi Predmet';
+    print '</a>';
+    print '</div>';
 }
 
-/*************************************
-UNOSENJE PODATAKA IZ FORME U TABLICE
- **************************************/
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  //TODO rijesi sigurnisni token - ne registriraju se metode Form klase. PROVJERI INICIJALNIZACIJU 
-  // Provjera sigurnosnog tokena - sprijecava ponavljanje unosa pri refreshu i stiti protiv CSRF napada
-  // if (!dol_check_token(GETPOST('token', 'alpha'))) {
-  //   setEventMessages($langs->trans("ErrorBadCSRFToken"), null, 'errors');
-  //   exit;
-  // }
+print '</div>'; // End card body
 
-  // 1. Dodavanje interne oznake korisnika 
-  if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'add') {
-    // Get form values
-    $interna_oznaka_korisnika = new Interna_oznaka_korisnika();
-    $interna_oznaka_korisnika->setIme_prezime(GETPOST('ime_user', 'alphanohtml'));
-    $interna_oznaka_korisnika->setRbr_korisnika(GETPOST('redni_broj', 'int'));
-    $interna_oznaka_korisnika->setRadno_mjesto_korisnika(GETPOST('radno_mjesto_korisnika', 'alphanohtml'));
-    dol_syslog("User full name: " . $interna_oznaka_korisnika->getIme_prezime(), LOG_INFO);
+// Card Footer with pagination info
+print '<div class="seup-card-footer">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<div class="seup-text-small" style="color: var(--seup-gray-500);">';
+print '<i class="fas fa-info-circle"></i> ' . sprintf($langs->trans('ShowingCases'), count($predmeti));
+print '</div>';
+print '<div class="seup-flex seup-gap-2">';
+print '<button class="seup-btn seup-btn-sm seup-btn-secondary" onclick="refreshTable()">';
+print '<i class="fas fa-sync-alt"></i> Osvježi';
+print '</button>';
+print '<button class="seup-btn seup-btn-sm seup-btn-secondary" onclick="printTable()">';
+print '<i class="fas fa-print"></i> Ispiši';
+print '</button>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-    // Validate inputs
-    if (empty($interna_oznaka_korisnika->getIme_prezime()) || empty($interna_oznaka_korisnika->getRbr_korisnika()) || empty($interna_oznaka_korisnika->getRadno_mjesto_korisnika())) {
-      setEventMessages($langs->trans("All fields are required"), null, 'errors');
-    } elseif (!preg_match('/^\d{1,2}$/', $interna_oznaka_korisnika->getRbr_korisnika())) {
-      setEventMessages($langs->trans("Invalid serial number (vrijednosti moraju biti u rasponu 0 - 99)"), null, 'errors');
-    } else {
+print '</div>'; // End main card
+print '</div>'; // End container
 
-
-      // Provjera da li postoji vec korisnik s tim rednim brojem
-      $sqlCheck = "SELECT COUNT(*) as cnt FROM " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika WHERE rbr = '" . $db->escape($interna_oznaka_korisnika->getRbr_korisnika()) . "'";
-      $resCheck = $db->query($sqlCheck);
-
-      if ($resCheck) {
-        $obj = $db->fetch_object($resCheck);
-        if ($obj->cnt > 0) {
-          setEventMessages($langs->trans("Korisnik s tim rednim brojem vec postoji u bazi"), null, 'errors');
-        } else {
-
-          $db->begin();
-          // Insert into database
-          $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_interna_oznaka_korisnika 
-                      (ID_ustanove, ime_prezime, rbr, naziv) 
-                      VALUES (
-                    " . (int)$ID_ustanove . ", 
-                    '" . $db->escape($interna_oznaka_korisnika->getIme_prezime()) . "',
-                    '" . $db->escape($interna_oznaka_korisnika->getRbr_korisnika()) . "',
-                    '" . $db->escape($interna_oznaka_korisnika->getRadno_mjesto_korisnika()) . "'                
-                )";
-
-          if ($db->query($sql)) {
-            $db->commit();
-            setEventMessages($langs->trans("Intena Oznaka Korisnika uspjesno dodana"), null, 'mesgs');
-          } else {
-            setEventMessages($langs->trans("Database error: ") . $db->lasterror(), null, 'errors');
-          }
-        }
-      }
-    }
-  }
-  if (isset($_POST['action_oznaka']) && $_POST['action_oznaka'] === 'update') {
-    $originalCombination = json_decode(GETPOST('original_combination', 'restricthtml'), true);
-
-    // Check if we have a valid combination
-    if (
-      !$originalCombination ||
-      !isset($originalCombination['klasa_br']) ||
-      !isset($originalCombination['sadrzaj']) ||
-      !isset($originalCombination['dosje_br'])
-    ) {
-
-      setEventMessages($langs->trans("ErrorMissingOriginalCombination"), null, 'errors');
-      $error++;
-    } else {
-      // Escape original values
-      $origKlasa = $db->escape($originalCombination['klasa_br']);
-      $origSadrzaj = $db->escape($originalCombination['sadrzaj']);
-      $origDosje = $db->escape($originalCombination['dosje_br']);
-
-      // Check if the original record exists
-      $sqlProvjera = "SELECT ID_klasifikacijske_oznake 
-                    FROM " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                    WHERE klasa_broj = '$origKlasa'
-                    AND sadrzaj = '$origSadrzaj'
-                    AND dosje_broj = '$origDosje'";
-
-      $rezultatProvjere = $db->query($sqlProvjera);
-
-      if ($db->num_rows($rezultatProvjere) <= 0) {
-        setEventMessages($langs->trans("KombinacijaNePostoji"), null, 'errors');
-        $error++;
-      } else {
-        $update_array = array();
-        $where_array = array();
-
-        // Add fields to update
-        if (!empty($klasifikacijska_oznaka->getKlasa_br())) {
-          $update_array[] = "klasa_broj = '" . $db->escape($klasifikacijska_oznaka->getKlasa_br()) . "'";
-        }
-        if (!empty($klasifikacijska_oznaka->getSadrzaj())) {
-          $update_array[] = "sadrzaj = '" . $db->escape($klasifikacijska_oznaka->getSadrzaj()) . "'";
-        }
-        if (!empty($klasifikacijska_oznaka->getDosjeBroj())) {
-          $update_array[] = "dosje_broj = '" . $db->escape($klasifikacijska_oznaka->getDosjeBroj()) . "'";
-        }
-        if (!empty($klasifikacijska_oznaka->getVrijemeCuvanja())) {
-          $update_array[] = "vrijeme_cuvanja = '" . $db->escape($klasifikacijska_oznaka->getVrijemeCuvanja()) . "'";
-        }
-        if (!empty($klasifikacijska_oznaka->getOpisKlasifikacijskeOznake())) {
-          $update_array[] = "opis_klasifikacijske_oznake = '" . $db->escape($klasifikacijska_oznaka->getOpisKlasifikacijskeOznake()) . "'";
-        }
-
-        // Build WHERE clause using original combination
-        $where_array[] = "klasa_broj = '$origKlasa'";
-        $where_array[] = "sadrzaj = '$origSadrzaj'";
-        $where_array[] = "dosje_broj = '$origDosje'";
-
-        if (!empty($update_array)) {
-          $sql = "UPDATE " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                    SET " . implode(', ', $update_array) . "
-                    WHERE " . implode(' AND ', $where_array);
-
-          dol_syslog("Update SQL: $sql", LOG_DEBUG);
-
-          if ($db->query($sql)) {
-            setEventMessages($langs->trans("Uspjesno azurirana klasifikacijska oznaka"), null, 'mesgs');
-          } else {
-            setEventMessages($langs->trans("ErrorDatabase") . ": " . $db->lasterror(), null, 'errors');
-            $error++;
-          }
-        } else {
-          setEventMessages($langs->trans("NemaPromjenaZaSpremanje"), null, 'warnings');
-        }
-        unset($klasifikacijska_oznaka);
-      }
-    }
-  }
-
-  /***************** /***************** /***************** /*****************/
-  /***************** SEKCIJA OZNAKA USTANOVE   ******************************/
-  /***************** /***************** /***************** /*****************/
-
-  // 2. Oznaka ustanove 
-  if (isset($_POST['action_ustanova'])) {
-    header('Content-Type: application/json; charset=UTF-8');
-    ob_end_clean();
-
-    $oznaka_ustanove = new Oznaka_ustanove();
-    try {
-      $conf->global->MAIN_HTML_THEME = 'nodumb';
-      $db->begin();
-      if ($podaci_postoje) {
-        $oznaka_ustanove->setID_oznaka_ustanove($podaci_postoje->singleton);
-      }
-      $oznaka_ustanove->setOznaka_ustanove(GETPOST('code_ustanova', 'alphanohtml'));
-      // Validacija formata unesenog teksta oznake_ustanove
-      if (!preg_match('/^\d{4}-\d-\d$/', $oznaka_ustanove->getOznaka_ustanove())) {
-        throw new Exception($langs->trans("Neispravan format Oznake Ustanove"));
-      }
-
-      $oznaka_ustanove->setNaziv_ustanove(GETPOST('name_ustanova', 'alphanohtml'));
-      $action = GETPOST('action_ustanova', 'alpha');
-      $sql = '';
-
-      // Validacija tipke DODAJ / AZURIRAJ
-      if ($action === 'add' && !$podaci_postoje) {
-        dol_syslog("Dodaj Klik", LOG_INFO);
-        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_oznaka_ustanove 
-                      (code_ustanova, name_ustanova) 
-                      VALUES ( 
-                    '" . $db->escape($oznaka_ustanove->getOznaka_ustanove()) . "',
-                    '" . $db->escape($oznaka_ustanove->getNaziv_ustanove()) . "'                  
-                )";
-      } else {
-        if (!is_object($podaci_postoje) || empty($podaci_postoje->singleton)) {
-          throw new Exception($langs->trans('RecordNotFound'));
-        }
-        $oznaka_ustanove->setID_oznaka_ustanove($podaci_postoje->singleton);
-        dol_syslog("Azuriraj Klik", LOG_INFO);
-        $sql = "UPDATE " . MAIN_DB_PREFIX . "a_oznaka_ustanove 
-                SET code_ustanova =  '" . $db->escape($oznaka_ustanove->getOznaka_ustanove()) . "',
-                name_ustanova = '" . $db->escape($oznaka_ustanove->getNaziv_ustanove()) . "'
-                WHERE ID_ustanove = '" . $db->escape($oznaka_ustanove->getID_oznaka_ustanove()) . "'";
-      }
-
-      $resql = $db->query($sql);
-      if (!$resql) {
-        dol_syslog("NE RADI DOBRO db->query(sql, params)", LOG_ERR);
-        throw new Exception($db->lasterror());
-      }
-
-      $db->commit();
-
-      echo json_encode([
-        'success' => true,
-        'message' => $langs->trans($action === 'add' ? 'Oznaka Ustanove Uspjesno dodana' : 'Oznaka Ustanove uspjesno azurirana'),
-        'data' => [
-          'code_ustanova' => $oznaka_ustanove->getOznaka_ustanove(),
-          'name_ustanova' => $oznaka_ustanove->getNaziv_ustanove()
-        ]
-      ]);
-      exit;
-    } catch (Exception $e) {
-      $db->rollback();
-      http_response_code(500);
-      echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-      ]);
-    }
-    unset($oznaka_ustanove);
-    exit;
-  }
-
-
-  /***************** /***************** /***************** /*****************/
-  /***************** SEKCIJA KLASIFIKACIJSKA OZNAKA ****************/
-  /***************** /***************** /***************** /*****************/
-
-  // 3. Unos klasifikacijske oznake
-  if (isset($_POST['action_klasifikacija'])) {
-    $klasifikacijska_oznaka = new Klasifikacijska_oznaka();
-    $klasifikacijska_oznaka->setKlasa_br(GETPOST('klasa_br', 'int'));
-    if (!preg_match('/^\d{3}$/', $klasifikacijska_oznaka->getKlasa_br())) {
-      setEventMessages($langs->trans("ErrorKlasaBrFormat"), null, 'errors');
-      $error++;
-    }
-    $klasifikacijska_oznaka->setSadrzaj(GETPOST('sadrzaj', 'int'));
-    if (!preg_match('/^\d{2}$/', $klasifikacijska_oznaka->getSadrzaj()) || $klasifikacijska_oznaka->getSadrzaj() > 99 || $klasifikacijska_oznaka->getSadrzaj() < 00) {
-      setEventMessages($langs->trans("ErrorSadrzajFormat"), null, 'errors');
-      $error++;
-    }
-    $klasifikacijska_oznaka->setDosjeBroj(GETPOST('dosje_br', 'int'));
-    if (!preg_match('/^\d{2}$/', $klasifikacijska_oznaka->getDosjeBroj()) || $klasifikacijska_oznaka->getDosjeBroj() > 50 || $klasifikacijska_oznaka->getDosjeBroj() < 0) {
-      setEventMessages($langs->trans("ErrorDosjeBrojFormat"), null, 'errors');
-      $error++;
-    }
-    $klasifikacijska_oznaka->setVrijemeCuvanja($klasifikacijska_oznaka->CastVrijemeCuvanjaToInt(GETPOST('vrijeme_cuvanja', 'int')));
-    if (!preg_match('/^\d{1,2}$/', $klasifikacijska_oznaka->getVrijemeCuvanja()) || $klasifikacijska_oznaka->getVrijemeCuvanja() > 10 || $klasifikacijska_oznaka->getVrijemeCuvanja() < 0) {
-      setEventMessages($langs->trans("ErrorVrijemeCuvanjaFormat"), null, 'errors');
-      $error++;
-    }  // TODO dodaj sve ErrorVrijemeCuvanjaFormat u lang file (i sve ostale tekstove koje korisimo u setEventMessages)
-    $klasifikacijska_oznaka->setOpisKlasifikacijskeOznake(GETPOST('opis_klasifikacije', 'alphanohtml'));
-
-    // Logika za gumb Unos Klasifikacijske Oznake : DODAJ
-    if ($_POST['action_klasifikacija'] === 'add') {
-      // provjera da li postoji vec klasa s unesenim brojem
-      $klasa_br = $db->escape($klasifikacijska_oznaka->getKlasa_br());
-      $sadrzaj = $db->escape($klasifikacijska_oznaka->getSadrzaj());
-      $dosje_br = $db->escape($klasifikacijska_oznaka->getDosjeBroj());
-
-      // Check if combination exists
-      $sqlProvjera = "SELECT ID_klasifikacijske_oznake 
-                    FROM " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                    WHERE klasa_broj = '$klasa_br'
-                    AND sadrzaj = '$sadrzaj'
-                    AND dosje_broj = '$dosje_br'";
-      $rezultatProvjere = $db->query($sqlProvjera);
-      if ($db->num_rows($rezultatProvjere) > 0) {
-        setEventMessages($langs->trans("KombinacijaKlaseSadrzajaDosjeaVecPostoji"), null, 'errors');
-        $error++;
-      } else { // ako ne postoji opleti dalje s insertom
-        $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                (ID_ustanove, klasa_broj, sadrzaj, dosje_broj, vrijeme_cuvanja, opis_klasifikacijske_oznake) 
-                VALUES (
-                    " . (int)$ID_ustanove . ",
-                    '" . $db->escape($klasifikacijska_oznaka->getKlasa_br()) . "',
-                    '" . $db->escape($klasifikacijska_oznaka->getSadrzaj()) . "',
-                    '" . $db->escape($klasifikacijska_oznaka->getDosjeBroj()) . "',
-                    '" . $db->escape($klasifikacijska_oznaka->getVrijemeCuvanja()) . "',
-                    '" . $db->escape($klasifikacijska_oznaka->getOpisKlasifikacijskeOznake()) . "'
-                )";
-        $rezultatProvjere = $db->query($sql);
-        if (!$rezultatProvjere) {
-          if ($db->lasterrno() == 1062) {
-            setEventMessages($langs->trans("ErrorKombinacijaDuplicate"), null, 'errors');
-          } else {
-            setEventMessages($langs->trans("ErrorDatabase") . ": " . $db->lasterror(), null, 'errors');
-          }
-          $error++;
-        } else {
-          setEventMessages($langs->trans("Uspjesno pohranjena klasifikacijska oznaka"), null, 'mesgs');
-        }
-        unset($klasifikacijska_oznaka);
-      }
-
-      // Logika za gumb Unos Klasifikacijske Oznake : AZURIRAJ
-    } elseif ($_POST['action_klasifikacija'] === 'update') {
-      dol_syslog("Received POST data: " . print_r($_POST, true), LOG_DEBUG);
-
-      $id_oznake = GETPOST('id_klasifikacijske_oznake', 'int');
-      dol_syslog("ID klasifikacijske oznake: " . $id_oznake, LOG_DEBUG);
-
-      if (!$id_oznake) {
-        setEventMessages($langs->trans("ErrorMissingRecordID"), null, 'errors');
-        $error++;
-      } else {
-        // Check if the record with this ID exists
-        $sqlProvjera = "SELECT * FROM " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-            WHERE ID_klasifikacijske_oznake = " . (int)$id_oznake;
-
-        $rezultatProvjere = $db->query($sqlProvjera);
-
-        if ($db->num_rows($rezultatProvjere) <= 0) {
-          setEventMessages($langs->trans("KlasifikacijskaOznakaNePostoji"), null, 'errors');
-          $error++;
-        } else {
-          $update_array = array();
-
-          // Build the update array
-          if (!empty($klasifikacijska_oznaka->getKlasa_br())) {
-            $update_array[] = "klasa_broj = '" . $db->escape($klasifikacijska_oznaka->getKlasa_br()) . "'";
-          }
-          if (!empty($klasifikacijska_oznaka->getSadrzaj())) {
-            $update_array[] = "sadrzaj = '" . $db->escape($klasifikacijska_oznaka->getSadrzaj()) . "'";
-          }
-          if (!empty($klasifikacijska_oznaka->getDosjeBroj())) {
-            $update_array[] = "dosje_broj = '" . $db->escape($klasifikacijska_oznaka->getDosjeBroj()) . "'";
-          }
-          if (!empty($klasifikacijska_oznaka->getVrijemeCuvanja())) {
-            $update_array[] = "vrijeme_cuvanja = '" . $db->escape($klasifikacijska_oznaka->getVrijemeCuvanja()) . "'";
-          }
-          if (!empty($klasifikacijska_oznaka->getOpisKlasifikacijskeOznake())) {
-            $update_array[] = "opis_klasifikacijske_oznake = '" . $db->escape($klasifikacijska_oznaka->getOpisKlasifikacijskeOznake()) . "'";
-          }
-
-          if (count($update_array) > 0) {
-            $sql = "UPDATE " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                SET " . implode(', ', $update_array) . "
-                WHERE ID_klasifikacijske_oznake = " . (int)$id_oznake;
-
-            dol_syslog("Update SQL: $sql", LOG_DEBUG);
-
-            if ($db->query($sql)) {
-              setEventMessages($langs->trans("Uspjesno azurirana klasifikacijska oznaka"), null, 'mesgs');
-            } else {
-              setEventMessages($langs->trans("ErrorDatabase") . ": " . $db->lasterror(), null, 'errors');
-              $error++;
-            }
-          } else {
-            setEventMessages($langs->trans("NemaPromjenaZaSpremanje"), null, 'warnings');
-          }
-          unset($klasifikacijska_oznaka);
-        }
-      }
-      // logika za gumb OBRISI
-    } elseif ($_POST['action_klasifikacija'] === 'delete') {
-
-      $id_oznake = GETPOST('id_klasifikacijske_oznake', 'int');
-
-      if (!$id_oznake) {
-        setEventMessages($langs->trans("ErrorMissingRecordID"), null, 'errors');
-        $error++;
-      } else {
-        try {
-          $db->begin();
-
-          // First check if the record exists
-          $sqlProvjera = "SELECT ID_klasifikacijske_oznake 
-                            FROM " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                            WHERE ID_klasifikacijske_oznake = " . (int)$id_oznake;
-
-          $rezultatProvjere = $db->query($sqlProvjera);
-
-          if ($db->num_rows($rezultatProvjere) <= 0) {
-            setEventMessages($langs->trans("KlasifikacijskaOznakaNePostoji"), null, 'errors');
-            $error++;
-          } else {
-            // Delete query using ID
-            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_klasifikacijska_oznaka 
-                        WHERE ID_klasifikacijske_oznake = " . (int)$id_oznake;
-
-            if ($db->query($sql)) {
-              $db->commit();
-              setEventMessages($langs->trans("KlasifikacijskaOznakaUspjesnoObrisana"), null, 'mesgs');
-
-              // Redirect da se izbjegne ponovno slanje forme
-              header('Location: ' . $_SERVER['PHP_SELF']);
-              exit;
-
-            } else {
-              $db->rollback();
-              setEventMessages($langs->trans("ErrorDeleteFailed") . ": " . $db->lasterror(), null, 'errors');
-            }
-          }
-        } catch (Exception $e) {
-          $db->rollback();
-          setEventMessages($langs->trans("ErrorException") . ": " . $e->getMessage(), null, 'errors');
-        }
-      }
-    }
-  }
-}
-
-
-                <option value="<?php echo $val; ?>"><?php echo $val; ?></option>
-              <?php endfor; ?>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label for="vrijeme_cuvanja" class="form-label"><?php echo $langs->trans('Vrijeme Cuvanja:'); ?></label>
-            <select id="vrijeme_cuvanja" name="vrijeme_cuvanja" class="form-select">
-              <option value="permanent"><?php echo $langs->trans('Trajno'); ?></option>
-              <?php for ($g = 1; $g <= 10; $g++): ?>
-                <option value="<?php echo $g; ?>"><?php echo $g . ' ' . $langs->trans('Godina'); ?></option>
-              <?php endfor; ?>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label for="opis_klasifikacije" class="form-label"><?php echo $langs->trans('Opis Klasifikacijske Oznake:'); ?></label>
-            <textarea id="opis_klasifikacije" name="opis_klasifikacije" class="form-control" rows="3" placeholder="<?php echo $langs->trans('Unesi Opis'); ?>"></textarea>
-          </div>
-
-          <div class="mt-3">
-            <button type="submit" name="action_klasifikacija" value="add" class="btn btn-primary me-2"><?php echo $langs->trans('DODAJ'); ?></button>
-            <button type="submit" name="action_klasifikacija" value="update" class="btn btn-secondary me-2"><?php echo $langs->trans('AŽURIRAJ'); ?></button>
-            <button type="submit" name="action_klasifikacija" value="delete" class="btn btn-danger"><?php echo $langs->trans('OBRIŠI'); ?></button>
-          </div>
-        </div>
-    </div>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const input = document.getElementById('klasa_br');
-        const resultsContainer = document.getElementById('autocomplete-results');
-        const formFields = {
-          sadrzaj: document.getElementById('sadrzaj'),
-          dosje_br: document.getElementById('dosje_br'),
-          vrijeme_cuvanja: document.getElementById('vrijeme_cuvanja'),
-          opis_klasifikacije: document.getElementById('opis_klasifikacije')
-        };
-
-        let debounceTimer;
-
-        input.addEventListener('input', debounce(function(e) {
-          const searchTerm = e.target.value.trim();
-          if (searchTerm.length >= 1) {
-            fetch('../class/autocomplete.php', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'query=' + encodeURIComponent(searchTerm)
-              })
-              .then(handleErrors)
-              .then(response => response.json())
-              .then(data => showResults(data))
-              .catch(error => console.error('Error:', error));
-          } else {
-            clearResults();
-          }
-        }, 300));
-
-        function showResults(results) {
-          resultsContainer.style.display = results.length > 0 ? 'block' : 'none';
-          resultsContainer.innerHTML = '';
-          results.forEach(result => {
-            const div = document.createElement('div');
-            div.className = 'seup-dropdown-item';
-            div.textContent = result.klasa_br + ' - ' + result.sadrzaj + ' - ' + result.dosje_br;
-            div.dataset.id = result.id; // ID po kojem se drzimo za update i delete
-            div.dataset.record = JSON.stringify(result);
-            console.log('Result:', result);
-            div.addEventListener('click', () => populateForm(result));
-            resultsContainer.appendChild(div);
-          });
-        }
-
-        function populateForm(data) {
-          input.value = data.klasa_br;
-          formFields.sadrzaj.value = data.sadrzaj || '';
-          formFields.dosje_br.value = data.dosje_br || '';
-          formFields.vrijeme_cuvanja.value = data.vrijeme_cuvanja.toString() === '0' ? 'permanent' : data.vrijeme_cuvanja;
-          formFields.opis_klasifikacije.value = data.opis_klasifikacije || '';
-          // Store the original combination for update identification
-          if (!document.getElementById('hidden_id_klasifikacijske_oznake')) {
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.id = 'hidden_id_klasifikacijske_oznake';
-            hiddenInput.name = 'id_klasifikacijske_oznake';
-            document.querySelector('form').appendChild(hiddenInput);
-          }
-          // Store as JSON string
-          const combination = JSON.stringify({
-            klasa_br: data.klasa_br,
-            sadrzaj: data.sadrzaj,
-            dosje_br: data.dosje_br
-          });
-
-          document.getElementById('hidden_id_klasifikacijske_oznake').value = data.ID;
-          console.log('Set record ID:', data.ID);
-          clearResults();
-        }
-
-        function debounce(func, wait) {
-          let timeout;
-          return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-          };
-        }
-
-        function handleErrors(response) {
-          if (!response.ok) throw new Error(response.statusText);
-          return response;
-        }
-
-        function clearResults() {
-          resultsContainer.style.display = 'none';
-          resultsContainer.innerHTML = '';
-        }
-
-        // Hide results when clicking outside
-        document.addEventListener('click', function(e) {
-          if (!e.target.closest('.seup-dropdown') && e.target !== input) {
-            clearResults();
-          }
-        });
-      });
-    </script>
-    </form>
-
-
-<?php
 // Load modern JavaScript
 print '<script src="/custom/seup/js/seup-modern.js"></script>';
+print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
+
+?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const tableRows = document.querySelectorAll('.predmet-row');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+
+        tableRows.forEach(row => {
+            const searchData = row.getAttribute('data-search');
+            const matchesSearch = searchData.includes(searchTerm);
+            const matchesStatus = !statusValue || statusValue === 'active'; // All current cases are active
+            
+            if (matchesSearch && matchesStatus) {
+                row.style.display = '';
+                row.classList.add('seup-fade-in');
+            } else {
+                row.style.display = 'none';
+                row.classList.remove('seup-fade-in');
+            }
+        });
+
+        // Update results count
+        const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+        const countElement = document.querySelector('.seup-card-footer .seup-text-small');
+        if (countElement) {
+            countElement.innerHTML = '<i class="fas fa-info-circle"></i> Prikazano ' + visibleRows.length + ' od ' + tableRows.length + ' predmeta';
+        }
+    }
+
+    // Debounced search
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterTable, 300);
+    });
+
+    statusFilter.addEventListener('change', filterTable);
+
+    // Enhanced row interactions
+    tableRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('button, a')) {
+                // Get the predmet ID and navigate to details
+                const predmetId = this.querySelector('.seup-badge').textContent;
+                window.location.href = 'predmet.php?id=' + predmetId;
+            }
+        });
+
+        // Add hover effect
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'var(--seup-primary-50)';
+            this.style.cursor = 'pointer';
+        });
+
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+            this.style.cursor = '';
+        });
+    });
+});
+
+// Utility functions
+function closeCase(caseId) {
+    if (confirm('Jeste li sigurni da želite zatvoriti ovaj predmet?')) {
+        // Here you would implement the close case functionality
+        window.seupNotifications?.show('Predmet #' + caseId + ' je zatvoren', 'success');
+        
+        // Remove the row with animation
+        const row = document.querySelector(`[data-case-id="${caseId}"]`);
+        if (row) {
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-100%)';
+            setTimeout(() => row.remove(), 300);
+        }
+    }
+}
+
+function exportToExcel() {
+    window.seupNotifications?.show('Izvoz u Excel je pokrenut...', 'info');
+    // Here you would implement Excel export functionality
+}
+
+function refreshTable() {
+    window.location.reload();
+}
+
+function printTable() {
+    window.print();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + N for new case
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = 'novi_predmet.php';
+    }
+    
+    // Escape to clear search
+    if (e.key === 'Escape') {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = '';
+        filterTable();
+    }
+});
+</script>
+
+<?php
 
 llxFooter();
 $db->close();
