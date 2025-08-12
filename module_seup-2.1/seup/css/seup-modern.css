@@ -1029,7 +1029,7 @@ body {
 .seup-tooltip {
   position: relative;
   display: inline-block;
-  z-index: 1100;
+  z-index: 1100 !important;
 }
 
 .seup-tooltip::after {
@@ -1048,7 +1048,7 @@ body {
   pointer-events: none;
   transition: var(--seup-transition);
   margin-bottom: var(--seup-space-2);
-  z-index: 1200;
+  z-index: 1200 !important;
 }
 
 .seup-tooltip:hover::after {

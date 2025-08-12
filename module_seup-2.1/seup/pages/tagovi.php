@@ -474,26 +474,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Search functionality
     const searchInput = document.getElementById('searchTags');
-    const tagCards = document.querySelectorAll('.seup-tag-card');
+    const tagCards = document.querySelectorAll('.seup-tag-card-compact');
+    const colorFilterBtns = document.querySelectorAll('.seup-color-filter-btn');
     
-    if (searchInput && tagCards.length > 0) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+    let currentColorFilter = 'all';
+    
+    function filterTags() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        
+        tagCards.forEach(card => {
+            const tagName = card.getAttribute('data-tag');
+            const tagColor = card.getAttribute('data-color');
             
-            tagCards.forEach(card => {
-                const tagName = card.getAttribute('data-tag');
-                const matches = tagName.includes(searchTerm);
-                
-                if (matches) {
-                    card.style.display = 'block';
-                    card.classList.add('seup-fade-in');
-                } else {
-                    card.style.display = 'none';
-                    card.classList.remove('seup-fade-in');
-                }
-            });
+            const matchesSearch = !searchTerm || tagName.includes(searchTerm);
+            const matchesColor = currentColorFilter === 'all' || tagColor === currentColorFilter;
+            
+            if (matchesSearch && matchesColor) {
+                card.style.display = 'block';
+                card.classList.add('seup-fade-in');
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('seup-fade-in');
+            }
         });
     }
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', filterTags);
+    }
+    
+    // Color filter functionality
+    colorFilterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            colorFilterBtns.forEach(b => b.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Update current filter
+            currentColorFilter = this.getAttribute('data-color');
+            
+            // Apply filter
+            filterTags();
+        });
+    });
     
     // Form submission with loading state
     const tagForm = document.getElementById('tagForm');
