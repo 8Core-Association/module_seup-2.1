@@ -354,6 +354,9 @@ $db->close();
     }
   });
 
+  // Global variable for current date
+  const now = new Date();
+
   // Enhanced Date Picker Implementation
   class SEUPDatePicker {
     constructor(container) {
@@ -441,7 +444,7 @@ $db->close();
         const isCurrentMonth = date.getMonth() === month;
         const isToday = date.toDateString() === now.toDateString();
         const isSelected = this.selectedDate && this.selectedDate === this.formatDate(date);
-        const isPast = date < today && !isToday;
+        const isPast = date < today.setHours(0,0,0,0) && !isToday;
         let dayClass = `seup-calendar-day`;
         if (!isCurrentMonth) dayClass += ' other-month';
         if (isToday) dayClass += ' today';
@@ -471,6 +474,9 @@ $db->close();
     
     attachCalendarEvents() {
       this.calendar.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (e.target.classList.contains('seup-calendar-day') && !e.target.disabled) {
           this.selectDate(e.target.dataset.date);
         }
@@ -520,6 +526,7 @@ $db->close();
       }, 1000);
     }
   }
+  
   document.addEventListener("DOMContentLoaded", function() {
     // Initialize custom date pickers
     document.querySelectorAll('.seup-date-picker').forEach(picker => {
@@ -580,8 +587,8 @@ $db->close();
         }
 
         // Update button style
-        label.classList.remove('btn-outline-secondary');
-        label.classList.add('btn-primary');
+        label.classList.remove('seup-btn-secondary');
+        label.classList.add('seup-btn-primary');
 
         // Clear any previous errors
         errorDiv.style.display = 'none';
@@ -602,8 +609,8 @@ $db->close();
         selectField.innerHTML = '';
 
         // Revert button style
-        label.classList.remove('btn-primary');
-        label.classList.add('btn-outline-secondary');
+        label.classList.remove('seup-btn-primary');
+        label.classList.add('seup-btn-secondary');
 
         // Clear any errors
         errorDiv.style.display = 'none';
@@ -613,9 +620,10 @@ $db->close();
         container.style.display = 'none';
 
         // Clear date inputs
-        jQuery('input[name="strankaDatumOtvaranja_day"]').val('');
-        jQuery('input[name="strankaDatumOtvaranja_month"]').val('');
-        jQuery('input[name="strankaDatumOtvaranja_year"]').val('');
+        const strankaDateInput = document.querySelector('input[name="strankaDatumOtvaranja"]');
+        if (strankaDateInput) {
+          strankaDateInput.value = '';
+        }
       }
     });
 
@@ -839,7 +847,7 @@ $db->close();
             // Create error element if it doesn't exist
             const errorDiv = document.createElement('div');
             errorDiv.id = 'strankaDateError';
-            errorDiv.className = 'invalid-feedback';
+            errorDiv.className = 'seup-field-error';
             errorDiv.textContent = 'Odaberite datum otvaranja predmeta!';
             errorDiv.style.display = 'block';
             document.querySelector('#strankaDatumContainer').appendChild(errorDiv);
@@ -940,14 +948,14 @@ $db->close();
             const mainDateInput = document.querySelector('input[name="datumOtvaranja"]');
             if (mainDateInput) {
               mainDateInput.value = '';
-              mainDateInput.dispatchEvent(new Event('change')); // Trigger Flatpickr update
+              mainDateInput.dispatchEvent(new Event('change'));
             }
 
             // Clear customer date inputs
             const strankaDateInput = document.querySelector('input[name="strankaDatumOtvaranja"]');
             if (strankaDateInput) {
               strankaDateInput.value = '';
-              strankaDateInput.dispatchEvent(new Event('change')); // Trigger Flatpickr update
+              strankaDateInput.dispatchEvent(new Event('change'));
             }
 
             // Reset Stranka section
@@ -972,8 +980,8 @@ $db->close();
               // Update button styles
               const strankaCheckLabel = document.getElementById('strankaCheckLabel');
               if (strankaCheckLabel) {
-                strankaCheckLabel.classList.remove('btn-primary');
-                strankaCheckLabel.classList.add('btn-outline-secondary');
+                strankaCheckLabel.classList.remove('seup-btn-primary');
+                strankaCheckLabel.classList.add('seup-btn-secondary');
               }
 
               // Hide date container
@@ -983,6 +991,18 @@ $db->close();
 
             // Clear case title
             document.getElementById("naziv").value = "";
+            
+            // Reset selected tags
+            selectedTags.clear();
+            selectedTagsContainer.innerHTML = '<span class="seup-text-small" style="color: var(--seup-gray-500); align-self: center;" id="tags-placeholder">Odabrane oznake će se prikazati ovdje</span>';
+            
+            // Reset tag dropdown
+            const buttonText = tagsDropdown.querySelector('span');
+            buttonText.textContent = 'Odaberi oznake';
+            selectedOption = null;
+            document.querySelectorAll('.tag-option').forEach(btn => {
+              btn.classList.remove('active');
+            });
           } else {
             console.error("Error otvaranje predmeta NOVI_PREDMET:", data.error);
             alert("Greška pri otvaranju predmeta: NOVI_PREDMET " + data.error);
@@ -1006,164 +1026,181 @@ $db->close();
 
     // Initial update to set the default state
     updateKlasaValue();
-  });
 
 
-  // Tag selection functionality
-  const tagsDropdown = document.getElementById("tagsDropdown");
-  const tagsDropdownMenu = document.getElementById("tags-dropdown-menu");
-  const availableTags = document.getElementById("available-tags");
-  const addTagBtn = document.getElementById("add-tag-btn");
-  const selectedTagsContainer = document.getElementById("selected-tags");
-  const tagsPlaceholder = document.getElementById("tags-placeholder");
-  const selectedTags = new Set();
-  
-  // Enhanced tag colors array with more variety
-  const tagColors = [
-    { bg: '#dbeafe', text: '#1e40af', border: '#3b82f6', name: 'blue' },
-    { bg: '#f3e8ff', text: '#7c3aed', border: '#8b5cf6', name: 'purple' },
-    { bg: '#dcfce7', text: '#16a34a', border: '#22c55e', name: 'green' },
-    { bg: '#fed7aa', text: '#ea580c', border: '#f97316', name: 'orange' },
-    { bg: '#fce7f3', text: '#db2777', border: '#ec4899', name: 'pink' },
-    { bg: '#ccfbf1', text: '#0d9488', border: '#14b8a6', name: 'teal' },
-    { bg: '#fef3c7', text: '#d97706', border: '#f59e0b', name: 'amber' },
-    { bg: '#e0e7ff', text: '#4f46e5', border: '#6366f1', name: 'indigo' },
-    { bg: '#fecaca', text: '#dc2626', border: '#ef4444', name: 'red' },
-    { bg: '#d1fae5', text: '#059669', border: '#10b981', name: 'emerald' },
-    { bg: '#e0f2fe', text: '#0284c7', border: '#0ea5e9', name: 'sky' },
-    { bg: '#fef7cd', text: '#ca8a04', border: '#eab308', name: 'yellow' }
-  ];
-  
-  let colorIndex = 0;
-
-  // Track selected option
-  let selectedOption = null;
-
-  // Enhanced dropdown functionality
-  tagsDropdown.addEventListener("click", function(e) {
-    e.preventDefault();
-    const isOpen = tagsDropdownMenu.style.display === 'block';
-    tagsDropdownMenu.style.display = isOpen ? 'none' : 'block';
+    // Tag selection functionality
+    const tagsDropdown = document.getElementById("tagsDropdown");
+    const tagsDropdownMenu = document.getElementById("tags-dropdown-menu");
+    const availableTags = document.getElementById("available-tags");
+    const addTagBtn = document.getElementById("add-tag-btn");
+    const selectedTagsContainer = document.getElementById("selected-tags");
+    const tagsPlaceholder = document.getElementById("tags-placeholder");
+    const selectedTags = new Set();
     
-    // Animate dropdown
-    if (!isOpen) {
-      tagsDropdownMenu.style.opacity = '0';
-      tagsDropdownMenu.style.transform = 'translateY(-10px)';
-      setTimeout(() => {
-        tagsDropdownMenu.style.opacity = '1';
-        tagsDropdownMenu.style.transform = 'translateY(0)';
-      }, 10);
-    }
+    // Enhanced tag colors array with more variety
+    const tagColors = [
+      { bg: '#dbeafe', text: '#1e40af', border: '#3b82f6', name: 'blue' },
+      { bg: '#f3e8ff', text: '#7c3aed', border: '#8b5cf6', name: 'purple' },
+      { bg: '#dcfce7', text: '#16a34a', border: '#22c55e', name: 'green' },
+      { bg: '#fed7aa', text: '#ea580c', border: '#f97316', name: 'orange' },
+      { bg: '#fce7f3', text: '#db2777', border: '#ec4899', name: 'pink' },
+      { bg: '#ccfbf1', text: '#0d9488', border: '#14b8a6', name: 'teal' },
+      { bg: '#fef3c7', text: '#d97706', border: '#f59e0b', name: 'amber' },
+      { bg: '#e0e7ff', text: '#4f46e5', border: '#6366f1', name: 'indigo' },
+      { bg: '#fecaca', text: '#dc2626', border: '#ef4444', name: 'red' },
+      { bg: '#d1fae5', text: '#059669', border: '#10b981', name: 'emerald' },
+      { bg: '#e0f2fe', text: '#0284c7', border: '#0ea5e9', name: 'sky' },
+      { bg: '#fef7cd', text: '#ca8a04', border: '#eab308', name: 'yellow' }
+    ];
     
-    // Update chevron icon
-    const chevron = tagsDropdown.querySelector('.fas');
-    chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
-  });
+    let colorIndex = 0;
 
-  // Close dropdown when clicking outside
-  document.addEventListener("click", function(e) {
-    if (!e.target.closest('.seup-dropdown')) {
-      tagsDropdownMenu.style.display = 'none';
-      const chevron = tagsDropdown.querySelector('.fas');
-      chevron.style.transform = 'rotate(0deg)';
-    }
-  });
+    // Track selected option
+    let selectedOption = null;
 
-  availableTags.addEventListener("click", function(e) {
-    if (e.target.classList.contains("tag-option")) {
-      // Remove active class from all options
-      document.querySelectorAll('.tag-option').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      // Set active class on clicked option
-      e.target.classList.add('active');
-      selectedOption = e.target;
-
-      // Update dropdown button text
-      const buttonText = tagsDropdown.querySelector('span');
-      buttonText.textContent = e.target.textContent;
-    }
-  });
-
-  // Add tag to selection
-  addTagBtn.addEventListener("click", function() {
-    if (!selectedOption) return;
-
-    const tagId = selectedOption.dataset.tagId;
-    const tagName = selectedOption.textContent;
-
-    if (!selectedTags.has(tagId)) {
-      selectedTags.add(tagId);
-      
-      // Hide placeholder if this is the first tag
-      if (tagsPlaceholder) {
-        tagsPlaceholder.style.display = 'none';
-      }
-      
-      // Get color for this tag
-      const color = tagColors[colorIndex % tagColors.length];
-      colorIndex++;
-
-      // Create selected tag badge
-      const tagElement = document.createElement("div");
-      tagElement.className = `seup-tag seup-tag-removable seup-tag-${color.name} seup-fade-in`;
-      tagElement.dataset.tagId = tagId;
-      tagElement.style.background = color.bg;
-      tagElement.style.color = color.text;
-      tagElement.style.borderColor = color.border;
-      
-      tagElement.innerHTML = `
-        <i class="fas fa-tag"></i>
-        <span class="tag-text">${tagName}</span>
-        <button type="button" class="seup-tag-remove" aria-label="Remove">
-          <i class="fas fa-times" style="font-size: 0.7rem;"></i>
-        </button>
-      `;
-
-      selectedTagsContainer.appendChild(tagElement);
-      
-      // Add entrance animation
-      setTimeout(() => {
-        tagElement.style.transform = 'scale(1)';
-        tagElement.style.opacity = '1';
-      }, 10);
-
-      // Reset selection
-      selectedOption.classList.remove('active');
-      selectedOption = null;
-      
-      const buttonText = tagsDropdown.querySelector('span');
-      buttonText.textContent = 'Odaberi oznake';
-      tagsDropdownMenu.style.display = 'none';
-      
-      const chevron = tagsDropdown.querySelector('.fas');
-      chevron.style.transform = 'rotate(0deg)';
-    }
-  });
-
-  // Remove tag from selection
-  selectedTagsContainer.addEventListener("click", function(e) {
-    if (e.target.closest(".seup-tag-remove")) {
-      const tagElement = e.target.closest(".seup-tag");
-      const tagId = tagElement.dataset.tagId;
-
-      selectedTags.delete(tagId);
-      
-      // Animate removal
-      tagElement.style.opacity = '0';
-      tagElement.style.transform = 'scale(0.8)';
-      setTimeout(() => {
-        tagElement.remove();
+    // Enhanced dropdown functionality
+    if (tagsDropdown) {
+      tagsDropdown.addEventListener("click", function(e) {
+        e.preventDefault();
+        const isOpen = tagsDropdownMenu.style.display === 'block';
+        tagsDropdownMenu.style.display = isOpen ? 'none' : 'block';
         
-        // Show placeholder if no tags left
-        if (selectedTags.size === 0 && tagsPlaceholder) {
-          tagsPlaceholder.style.display = 'block';
+        // Animate dropdown
+        if (!isOpen) {
+          tagsDropdownMenu.style.opacity = '0';
+          tagsDropdownMenu.style.transform = 'translateY(-10px)';
+          setTimeout(() => {
+            tagsDropdownMenu.style.opacity = '1';
+            tagsDropdownMenu.style.transform = 'translateY(0)';
+          }, 10);
         }
-      }, 200);
+        
+        // Update chevron icon
+        const chevron = tagsDropdown.querySelector('.fas');
+        if (chevron) {
+          chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+      });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function(e) {
+      if (!e.target.closest('.seup-dropdown') && tagsDropdownMenu) {
+        tagsDropdownMenu.style.display = 'none';
+        const chevron = tagsDropdown?.querySelector('.fas');
+        if (chevron) {
+          chevron.style.transform = 'rotate(0deg)';
+        }
+      }
+    });
+
+    if (availableTags) {
+      availableTags.addEventListener("click", function(e) {
+        if (e.target.classList.contains("tag-option")) {
+          // Remove active class from all options
+          document.querySelectorAll('.tag-option').forEach(btn => {
+            btn.classList.remove('active');
+          });
+
+          // Set active class on clicked option
+          e.target.classList.add('active');
+          selectedOption = e.target;
+
+          // Update dropdown button text
+          const buttonText = tagsDropdown.querySelector('span');
+          if (buttonText) {
+            buttonText.textContent = e.target.textContent;
+          }
+        }
+      });
+    }
+
+    // Add tag to selection
+    if (addTagBtn) {
+      addTagBtn.addEventListener("click", function() {
+        if (!selectedOption) return;
+
+        const tagId = selectedOption.dataset.tagId;
+        const tagName = selectedOption.textContent;
+
+        if (!selectedTags.has(tagId)) {
+          selectedTags.add(tagId);
+          
+          // Hide placeholder if this is the first tag
+          if (tagsPlaceholder) {
+            tagsPlaceholder.style.display = 'none';
+          }
+          
+          // Get color for this tag
+          const color = tagColors[colorIndex % tagColors.length];
+          colorIndex++;
+
+          // Create selected tag badge
+          const tagElement = document.createElement("div");
+          tagElement.className = `seup-tag seup-tag-removable seup-tag-${color.name} seup-fade-in`;
+          tagElement.dataset.tagId = tagId;
+          tagElement.style.background = color.bg;
+          tagElement.style.color = color.text;
+          tagElement.style.borderColor = color.border;
+          
+          tagElement.innerHTML = `
+            <i class="fas fa-tag"></i>
+            <span class="tag-text">${tagName}</span>
+            <button type="button" class="seup-tag-remove" aria-label="Remove">
+              <i class="fas fa-times" style="font-size: 0.7rem;"></i>
+            </button>
+          `;
+
+          selectedTagsContainer.appendChild(tagElement);
+          
+          // Add entrance animation
+          setTimeout(() => {
+            tagElement.style.transform = 'scale(1)';
+            tagElement.style.opacity = '1';
+          }, 10);
+
+          // Reset selection
+          selectedOption.classList.remove('active');
+          selectedOption = null;
+          
+          const buttonText = tagsDropdown.querySelector('span');
+          if (buttonText) {
+            buttonText.textContent = 'Odaberi oznake';
+          }
+          tagsDropdownMenu.style.display = 'none';
+          
+          const chevron = tagsDropdown.querySelector('.fas');
+          if (chevron) {
+            chevron.style.transform = 'rotate(0deg)';
+          }
+        }
+      });
+    }
+
+    // Remove tag from selection
+    if (selectedTagsContainer) {
+      selectedTagsContainer.addEventListener("click", function(e) {
+        if (e.target.closest(".seup-tag-remove")) {
+          const tagElement = e.target.closest(".seup-tag");
+          const tagId = tagElement.dataset.tagId;
+
+          selectedTags.delete(tagId);
+          
+          // Animate removal
+          tagElement.style.opacity = '0';
+          tagElement.style.transform = 'scale(0.8)';
+          setTimeout(() => {
+            tagElement.remove();
+            
+            // Show placeholder if no tags left
+            if (selectedTags.size === 0 && tagsPlaceholder) {
+              tagsPlaceholder.style.display = 'block';
+            }
+          }, 200);
+        }
+      });
     }
   });
-  //TODO CHECK if documents in db actually exist
 
 
 
