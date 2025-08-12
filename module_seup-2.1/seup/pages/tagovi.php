@@ -409,6 +409,7 @@ if ($resql) {
             
             print '<div class="tag-item" data-tag="' . strtolower($obj->tag) . '" data-color="' . $tagColor . '">';
             
+            print '<div class="tag-content">';
             print '<div class="tag-display" style="background-color: ' . $colorHex . '20; border-color: ' . $colorHex . '40; color: ' . $colorHex . ';">';
             print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
             print '</div>';
@@ -417,6 +418,7 @@ if ($resql) {
             print '<span><i class="fas fa-calendar"></i> ' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
             print '<span><i class="fas fa-user"></i> ' . ($creatorName ?: 'Nepoznato') . '</span>';
             print '<span><i class="fas fa-chart-bar"></i> ' . $usageCount . ' predmeta</span>';
+            print '</div>';
             print '</div>';
             
             print '<div class="tag-actions">';
@@ -582,8 +584,15 @@ print '<script src="/custom/seup/js/seup-modern.js"></script>';
     padding: 12px;
     transition: all 0.2s ease;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
+}
+
+.tag-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .tag-item:hover {
@@ -605,8 +614,8 @@ print '<script src="/custom/seup/js/seup-modern.js"></script>';
 }
 
 .tag-meta {
-    flex: 1;
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     font-size: 0.75rem;
     color: #64748b;
@@ -620,9 +629,11 @@ print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
 .tag-actions {
     display: flex;
+    flex-direction: column;
     gap: 4px;
     opacity: 0;
     transition: opacity 0.2s ease;
+    align-self: flex-start;
 }
 
 .tag-item:hover .tag-actions {
