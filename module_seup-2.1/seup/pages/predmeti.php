@@ -199,30 +199,45 @@ $predmetTableHTML .= '</div>'; // table-responsive
 $form = new Form($db);
 llxHeader("", $langs->trans("OpenCases"), '', '', 0, 0, '', '', '', 'mod-seup page-predmeti');
 
-// === BOOTSTRAP CDN ===
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">';
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
-print '<link href="/custom/seup/css/style.css" rel="stylesheet">';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-print '<div class="container mt-5 shadow-sm p-3 mb-5 bg-body rounded">';
-print '<div class="p-3 border rounded">';
-print '<div class="d-flex justify-content-between align-items-center mb-4">';
-print '<h4 class="mb-0">' . $langs->trans('OpenCases') . '</h4>';
-print '<button type="button" class="btn btn-primary btn-sm" id="noviPredmetBtn">';
-print '<i class="fas fa-plus me-1"></i> ' . $langs->trans('NewCase');
+// Page Header
+print '<div class="seup-page-header">';
+print '<div class="seup-container">';
+print '<h1 class="seup-page-title">Otvoreni Predmeti</h1>';
+print '<div class="seup-breadcrumb">';
+print '<a href="../seupindex.php">SEUP</a>';
+print '<i class="fas fa-chevron-right"></i>';
+print '<span>Predmeti</span>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+print '<div class="seup-container">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<h2 class="seup-heading-3" style="margin: 0;">' . $langs->trans('OpenCases') . '</h2>';
+print '<button type="button" class="seup-btn seup-btn-primary seup-interactive" id="noviPredmetBtn">';
+print '<i class="fas fa-plus"></i> ' . $langs->trans('NewCase');
 print '</button>';
 print '</div>';
+print '</div>';
+print '<div class="seup-card-body">';
 print $predmetTableHTML;
 print '</div>';
 print '<div class="seup-card-footer">';
 print '<div class="seup-flex seup-justify-between seup-items-center">';
 print '<div class="seup-text-small" style="color: var(--seup-gray-500);">';
-print '<i class="fas fa-info-circle"></i> ' . $langs->trans('ShowingCases', count($predmeti));
-print '</div>';
+print '<i class="fas fa-info-circle"></i> Prikazano ' . count($predmeti) . ' predmeta';
 print '</div>';
 print '</div>';
 print '</div>'; // End card
+print '</div>';
 print '</div>'; // End container
 
 // Load modern JavaScript
