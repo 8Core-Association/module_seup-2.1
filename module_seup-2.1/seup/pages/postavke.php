@@ -775,10 +775,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }, 300));
 
         function showResults(results) {
+          resultsContainer.style.display = results.length > 0 ? 'block' : 'none';
           resultsContainer.innerHTML = '';
           results.forEach(result => {
             const div = document.createElement('div');
-            div.className = 'autocomplete-item';
+            div.className = 'seup-dropdown-item';
             div.textContent = result.klasa_br + ' - ' + result.sadrzaj + ' - ' + result.dosje_br;
             div.dataset.id = result.id; // ID po kojem se drzimo za update i delete
             div.dataset.record = JSON.stringify(result);
@@ -828,44 +829,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function clearResults() {
+          resultsContainer.style.display = 'none';
           resultsContainer.innerHTML = '';
         }
 
         // Hide results when clicking outside
         document.addEventListener('click', function(e) {
-          if (!e.target.closest('.autocomplete-dropdown') && e.target !== input) {
-            resultsContainer.innerHTML = '';
+          if (!e.target.closest('.seup-dropdown') && e.target !== input) {
+            clearResults();
           }
         });
       });
     </script>
     </form>
-  </div>
-
-  <!-- Full-width opis -->
-  <form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-    <div class="row">
-      <div class="col-12">
-        <div class="custom-container bg-light border border-2 border-dashed rounded-3 p-4">
-          <h4 class="text-center text-muted mb-3">
-            <i class="fas fa-align-left me-2"></i><?php echo $langs->trans('Opis'); ?>
-          </h4>
-          <div class="text-center text-muted"><?php echo $langs->trans('Opis Tekst'); ?></div>
-          <div class="text-center mt-3">
-            <button class="btn btn-primary btn-lg">
-              <i class="fas fa-download me-2"></i><?php echo $langs->trans('Preuzmi Dokumentaciju'); ?>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </form>
-</div>
 
 
 <?php
-// Bootstrap JS
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
+// Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
 llxFooter();
 $db->close();

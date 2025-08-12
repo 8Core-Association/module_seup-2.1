@@ -1,37 +1,41 @@
+/* Legacy styles - keeping for backward compatibility but enhancing with modern design */
+
 /* Ghost button s naglašenim obrubom i hover pozadinom */
 .ghost-button {
   display: inline-block;
   padding: 0.5rem 1rem;
-  border: 2px solid #007bff;
-  /* plavi obrub */
+  border: 2px solid var(--seup-primary-600, #2563eb);
   background-color: transparent;
-  color: #007bff;
-  /* plava boja teksta */
+  color: var(--seup-primary-600, #2563eb);
   text-decoration: none;
-  /* nema podvlačenja */
-  border-radius: 0.25rem;
-  /* blago zaobljeni kutovi */
+  border-radius: var(--seup-radius, 0.5rem);
   font-weight: 500;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: var(--seup-transition, all 0.2s ease);
   cursor: pointer;
 }
 
 .ghost-button:hover,
 .ghost-button:focus {
-  background-color: #007bff;
-  /* plava pozadina */
+  background-color: var(--seup-primary-600, #2563eb);
   color: #ffffff;
-  /* bijeli tekst */
   text-decoration: none;
-  /* pazi da ne dođe do podvlačenja */
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1));
 }
 
 .custom-container {
   padding: 20px;
   margin-bottom: 20px;
   background-color: white;
-  border-radius: 15px;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: var(--seup-radius-lg, 0.75rem);
+  box-shadow: var(--seup-shadow, 0 1px 3px 0 rgb(0 0 0 / 0.1));
+  border: 1px solid var(--seup-gray-200, #e2e8f0);
+  transition: var(--seup-transition, all 0.2s ease);
+}
+
+.custom-container:hover {
+  box-shadow: var(--seup-shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1));
+  transform: translateY(-1px);
 }
 
 
@@ -46,19 +50,26 @@
   max-height: 200px;
   overflow-y: auto;
   background: white;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--seup-gray-200, #e2e8f0);
+  border-radius: var(--seup-radius, 0.5rem);
+  box-shadow: var(--seup-shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+  margin-top: var(--seup-space-1, 0.25rem);
 }
 
 .autocomplete-item {
-  padding: 0.5rem 1rem;
+  padding: var(--seup-space-3, 0.75rem) var(--seup-space-4, 1rem);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--seup-transition, all 0.2s ease);
+  border-bottom: 1px solid var(--seup-gray-100, #f1f5f9);
 }
 
 .autocomplete-item:hover {
-  background-color: #f8f9fa;
+  background-color: var(--seup-primary-50, #eff6ff);
+  color: var(--seup-primary-700, #1d4ed8);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
 }
 
 /* Autocomplete dropdown styles */
@@ -71,7 +82,8 @@
 }
 
 #stranka-results .dropdown-item:hover {
-  background-color: #82bff8;
+  background-color: var(--seup-primary-100, #dbeafe);
+  color: var(--seup-primary-700, #1d4ed8);
 }
 
 #stranka-results .company-name {
@@ -85,10 +97,16 @@
 
 /* Select2 styling */
 .select2-container--default .select2-selection--single {
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
+  border: 1px solid var(--seup-gray-300, #cbd5e1);
+  border-radius: var(--seup-radius, 0.5rem);
   height: 38px;
   padding: 5px;
+  transition: var(--seup-transition, all 0.2s ease);
+}
+
+.select2-container--default .select2-selection--single:focus-within {
+  border-color: var(--seup-primary-500, #3b82f6);
+  box-shadow: 0 0 0 3px var(--seup-primary-100, #dbeafe);
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
@@ -154,7 +172,39 @@
 
 /* Fix border when focused */
 #strankaContainer .select2-container--focus .select2-selection--single {
-    border-color: #86b7fe !important;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    border-color: var(--seup-primary-500, #3b82f6) !important;
+    box-shadow: 0 0 0 3px var(--seup-primary-100, #dbeafe) !important;
     outline: 0;
+}
+
+/* Enhanced animations */
+@keyframes seup-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.seup-pulse {
+  animation: seup-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Focus improvements */
+.seup-focus-visible:focus-visible {
+  outline: 2px solid var(--seup-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Print optimizations */
+@media print {
+  .seup-no-print {
+    display: none !important;
+  }
+  
+  .seup-card {
+    box-shadow: none !important;
+    border: 1px solid var(--seup-gray-300, #cbd5e1) !important;
+  }
+  
+  .seup-btn {
+    border: 1px solid var(--seup-gray-400, #94a3b8) !important;
+  }
 }
