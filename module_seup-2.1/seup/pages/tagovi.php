@@ -2,12 +2,24 @@
 
 /**
  * Plaćena licenca
- * (c) 2025 Tomislav Galić <tomislav@8core.hr>
- * Suradnik: Marko Šimunović <marko@8core.hr>
+ * (c) 2025 8Core Association
+ * Tomislav Galić <tomislav@8core.hr>
+ * Marko Šimunović <marko@8core.hr>
  * Web: https://8core.hr
  * Kontakt: info@8core.hr | Tel: +385 099 851 0717
- * Sva prava pridržana. Ovaj softver je vlasnički i zabranjeno ga je
- * distribuirati ili mijenjati bez izričitog dopuštenia autora.
+ * Sva prava pridržana. Ovaj softver je vlasnički i zaštićen je autorskim i srodnim pravima 
+ * te ga je izričito zabranjeno umnožavati, distribuirati, mijenjati, objavljivati ili 
+ * na drugi način eksploatirati bez pismenog odobrenja autora.
+ * U skladu sa Zakonom o autorskom pravu i srodnim pravima 
+ * (NN 167/03, 79/07, 80/11, 125/17), a osobito člancima 32. (pravo na umnožavanje), 35. 
+ * (pravo na preradu i distribuciju) i 76. (kaznene odredbe), 
+ * svako neovlašteno umnožavanje ili prerada ovog softvera smatra se prekršajem. 
+ * Prema Kaznenom zakonu (NN 125/11, 144/12, 56/15), članak 228., stavak 1., 
+ * prekršitelj se može kazniti novčanom kaznom ili zatvorom do jedne godine, 
+ * a sud može izreći i dodatne mjere oduzimanja protivpravne imovinske koristi.
+ * Bilo kakve izmjene, prijevodi, integracije ili dijeljenje koda bez izričitog pismenog 
+ * odobrenja autora smatraju se kršenjem ugovora i zakona te će se pravno sankcionirati. 
+ * Za sva pitanja, zahtjeve za licenciranjem ili dodatne informacije obratite se na info@8core.hr.
  */
 /**
  *	\file       seup/tagovi.php
@@ -62,6 +74,15 @@ if (isset($user->socid) && $user->socid > 0) {
     $socid = $user->socid;
 }
 
+// Add tag_color column if it doesn't exist
+$sql_check = "SHOW COLUMNS FROM " . MAIN_DB_PREFIX . "a_tagovi LIKE 'tag_color'";
+$resql_check = $db->query($sql_check);
+if ($resql_check && $db->num_rows($resql_check) == 0) {
+    $sql_alter = "ALTER TABLE " . MAIN_DB_PREFIX . "a_tagovi ADD COLUMN tag_color VARCHAR(20) DEFAULT 'blue' AFTER tag";
+    $db->query($sql_alter);
+    dol_syslog("Added tag_color column to a_tagovi table", LOG_INFO);
+}
+
 // Process form submission
 $error = 0;
 $success = 0;
@@ -69,6 +90,7 @@ $tag_name = '';
 
 if ($action == 'addtag' && !empty($_POST['tag'])) {
     $tag_name = GETPOST('tag', 'alphanohtml');
+    $tag_color = GETPOST('tag_color', 'alpha') ?: 'blue';
 
     // Validate input
     if (dol_strlen($tag_name) < 2) {
@@ -80,7 +102,7 @@ if ($action == 'addtag' && !empty($_POST['tag'])) {
         // Check if tag already exists
         $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "a_tagovi";
         $sql .= " WHERE tag = '" . $db->escape($tag_name) . "'";
-        $sql .= " AND entity = " . $conf->entity;
+        $sql .= " AND entity = " . (int)$conf->entity;
 
         $resql = $db->query($sql);
         if ($resql) {
@@ -88,13 +110,14 @@ if ($action == 'addtag' && !empty($_POST['tag'])) {
                 $error++;
                 setEventMessages($langs->trans('ErrorTagAlreadyExists'), null, 'errors');
             } else {
-                // Insert new tag
+                // Insert new tag with color
                 $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_tagovi";
-                $sql .= " (tag, entity, date_creation, fk_user_creat)";
+                $sql .= " (tag, tag_color, entity, date_creation, fk_user_creat)";
                 $sql .= " VALUES ('" . $db->escape($tag_name) . "',";
-                $sql .= " " . $conf->entity . ",";
+                $sql .= " '" . $db->escape($tag_color) . "',";
+                $sql .= " " . (int)$conf->entity . ",";
                 $sql .= " '" . $db->idate(dol_now()) . "',";
-                $sql .= " " . $user->id . ")";
+                $sql .= " " . (int)$user->id . ")";
 
                 $resql = $db->query($sql);
                 if ($resql) {
@@ -123,14 +146,14 @@ if ($action == 'deletetag') {
 
         // First delete associations in a_predmet_tagovi
         $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_predmet_tagovi";
-        $sql .= " WHERE fk_tag = " . $tagid;
+        $sql .= " WHERE fk_tag = " . (int)$tagid;
         $resql = $db->query($sql);
 
         if ($resql) {
             // Then delete the tag itself
             $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_tagovi";
-            $sql .= " WHERE rowid = " . $tagid;
-            $sql .= " AND entity = " . $conf->entity;
+            $sql .= " WHERE rowid = " . (int)$tagid;
+            $sql .= " AND entity = " . (int)$conf->entity;
 
             $resql = $db->query($sql);
             if ($resql) {
@@ -152,22 +175,22 @@ $totalTags = 0;
 $activeTags = 0;
 
 // Count total tags
-$sql = "SELECT COUNT(*) as total FROM " . MAIN_DB_PREFIX . "a_tagovi WHERE entity = " . $conf->entity;
+$sql = "SELECT COUNT(*) as total FROM " . MAIN_DB_PREFIX . "a_tagovi WHERE entity = " . (int)$conf->entity;
 $resql = $db->query($sql);
 if ($resql) {
     $obj = $db->fetch_object($resql);
-    $totalTags = $obj->total;
+    $totalTags = (int)$obj->total;
 }
 
 // Count tags that are actually used
 $sql = "SELECT COUNT(DISTINCT t.rowid) as active 
         FROM " . MAIN_DB_PREFIX . "a_tagovi t
         INNER JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
-        WHERE t.entity = " . $conf->entity;
+        WHERE t.entity = " . (int)$conf->entity;
 $resql = $db->query($sql);
 if ($resql) {
     $obj = $db->fetch_object($resql);
-    $activeTags = $obj->active;
+    $activeTags = (int)$obj->active;
 }
 
 /*
@@ -311,7 +334,7 @@ print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Preg
 print '</div>';
 print '<div class="seup-card-body">';
 
-// Search input
+// Search and Filter Section
 print '<div class="seup-form-group">';
 print '<div class="seup-input-group">';
 print '<input type="text" id="searchTags" class="seup-input seup-input-enhanced" placeholder="Pretraži oznake...">';
@@ -319,14 +342,33 @@ print '<i class="fas fa-search seup-input-icon"></i>';
 print '</div>';
 print '</div>';
 
+// Color Filter
+print '<div class="seup-form-group">';
+print '<label class="seup-label">Filter po boji</label>';
+print '<div class="seup-color-filter">';
+print '<button class="seup-color-filter-btn active" data-color="all">';
+print '<span class="seup-color-dot" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);"></span>';
+print 'Sve boje';
+print '</button>';
+
+$colors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
+foreach ($colors as $color) {
+    print '<button class="seup-color-filter-btn" data-color="' . $color . '">';
+    print '<span class="seup-color-dot seup-tag-' . $color . '"></span>';
+    print ucfirst($color);
+    print '</button>';
+}
+print '</div>';
+print '</div>';
+
 // Display existing tags with real data
-$sql = "SELECT t.rowid, t.tag, t.date_creation, u.firstname, u.lastname,
+$sql = "SELECT t.rowid, t.tag, t.tag_color, t.date_creation, u.firstname, u.lastname,
                COUNT(pt.fk_predmet) as usage_count
         FROM " . MAIN_DB_PREFIX . "a_tagovi t
         LEFT JOIN " . MAIN_DB_PREFIX . "user u ON t.fk_user_creat = u.rowid
         LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
-        WHERE t.entity = " . $conf->entity . "
-        GROUP BY t.rowid, t.tag, t.date_creation, u.firstname, u.lastname
+        WHERE t.entity = " . (int)$conf->entity . "
+        GROUP BY t.rowid, t.tag, t.tag_color, t.date_creation, u.firstname, u.lastname
         ORDER BY t.tag ASC";
 
 $resql = $db->query($sql);
@@ -339,15 +381,16 @@ if ($resql) {
         while ($obj = $db->fetch_object($resql)) {
             $creatorName = dolGetFirstLastname($obj->firstname, $obj->lastname);
             $usageCount = (int)$obj->usage_count;
+            $tagColor = $obj->tag_color ?: 'blue';
             
-            print '<div class="seup-tag-card-compact seup-interactive" data-tag="' . strtolower($obj->tag) . '">';
+            print '<div class="seup-tag-card-compact seup-interactive" data-tag="' . strtolower($obj->tag) . '" data-color="' . $tagColor . '">';
             
             print '<div class="seup-tag-card-header-compact">';
-            print '<div class="seup-tag seup-tag-primary">';
+            print '<div class="seup-tag seup-tag-' . $tagColor . '">';
             print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
             print '</div>';
             print '<div class="seup-tag-actions">';
-            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi" style="z-index: 1100;">';
+            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi" style="z-index: 1100 !important;">';
             print '<i class="fas fa-edit"></i>';
             print '</button>';
             
@@ -356,7 +399,7 @@ if ($resql) {
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
             print '<input type="hidden" name="token" value="' . newToken() . '">';
-            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši" style="z-index: 1100;">';
+            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši" style="z-index: 1100 !important;">';
             print '<i class="fas fa-trash"></i>';
             print '</button>';
             print '</form>';
