@@ -157,44 +157,48 @@ $formfile = new FormFile($db);
 // Set page title to "Tagovi"
 llxHeader("", $langs->trans("Tagovi"), '', '', 0, 0, '', '', '', 'mod-seup page-tagovi');
 
-// === BOOTSTRAP CDN ===
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">';
-
-// Font Awesome za ikone
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-// Main content using HEREDOC syntax
-$htmlContent = <<<HTML
-<div class="container mt-3">
-  <div class="shadow-sm p-4 bg-body rounded">
-    <div class="text-center mb-4">
-      <h2 class="mb-2"><i class="fas fa-tags me-2"></i>{$langs->trans("Tagovi")}</h2>
-      <p class="lead mb-3">Upravljanje oznakama za dokumente i predmete</p>
-    </div>
-    
-    <form method="POST" action="" class="mt-2">
-      <input type="hidden" name="action" value="addtag">
-      <div class="mb-3">
-        <label for="tag" class="form-label">{$langs->trans('Tag')}</label>
-        <div class="input-group">
-          <input type="text" name="tag" id="tag" class="form-control" 
-                 placeholder="{$langs->trans('UnesiNoviTag')}" 
-                 value="{$tag_name}" required>
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>
-            {$langs->trans('DodajTag')}
-          </button>
-        </div>
-        <div class="form-text mt-2">{$langs->trans('TagoviHelpText')}</div>
-      </div>
-    </form>
-    
-    <div class="mt-4">
-      <h4 class="mb-3">{$langs->trans('ExistingTags')}</h4>
-HTML;
+// Page Header
+print '<div class="seup-page-header">';
+print '<div class="seup-container">';
+print '<h1 class="seup-page-title">Upravljanje Oznakama</h1>';
+print '<div class="seup-breadcrumb">';
+print '<a href="../seupindex.php">SEUP</a>';
+print '<i class="fas fa-chevron-right"></i>';
+print '<span>Tagovi</span>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-print $htmlContent;
+print '<div class="seup-container">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h2 class="seup-heading-3" style="margin: 0;"><i class="fas fa-tags"></i> ' . $langs->trans("Tagovi") . '</h2>';
+print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Upravljanje oznakama za dokumente i predmete</p>';
+print '</div>';
+print '<div class="seup-card-body">';
+
+// Add tag form
+print '<form method="POST" action="" class="seup-mb-6">';
+print '<input type="hidden" name="action" value="addtag">';
+print '<div class="seup-form-group">';
+print '<label for="tag" class="seup-label">' . $langs->trans('Tag') . '</label>';
+print '<div class="seup-flex seup-gap-2">';
+print '<input type="text" name="tag" id="tag" class="seup-input" placeholder="' . $langs->trans('UnesiNoviTag') . '" value="' . $tag_name . '" required style="flex: 1;">';
+print '<button type="submit" class="seup-btn seup-btn-primary">';
+print '<i class="fas fa-plus"></i> ' . $langs->trans('DodajTag');
+print '</button>';
+print '</div>';
+print '<small class="seup-text-small" style="margin-top: var(--seup-space-1); display: block;">' . $langs->trans('TagoviHelpText') . '</small>';
+print '</div>';
+print '</form>';
+
+print '<h4 class="seup-heading-4">' . $langs->trans('ExistingTags') . '</h4>';
 
 // Display existing tags
 $sql = "SELECT rowid, tag, date_creation";
@@ -208,7 +212,7 @@ if ($resql) {
     $trans_confirm = $langs->trans('ConfirmDeleteTag');
 
     if ($num > 0) {
-        print '<div class="seup-flex" style="flex-wrap: wrap; gap: var(--seup-space-3); margin-top: var(--seup-space-4);">';
+        print '<div class="seup-flex" style="flex-wrap: wrap; gap: var(--seup-space-3);">';
         while ($obj = $db->fetch_object($resql)) {
             print '<div class="seup-tag seup-tag-removable seup-interactive">';
             print '<span>' . $obj->tag . '</span>';
@@ -218,7 +222,7 @@ if ($resql) {
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
             print '<button type="submit" class="seup-tag-remove" onclick="return confirm(\'' . dol_escape_js($trans_confirm) . '\')">';
-            print '<i class="fas fa-trash"></i>';
+            print '<i class="fas fa-times"></i>';
             print '</button>';
             print '</form>';
 
@@ -226,7 +230,7 @@ if ($resql) {
         }
         print '</div>';
     } else {
-        print '<div class="seup-empty-state" style="margin-top: var(--seup-space-4);">';
+        print '<div class="seup-empty-state">';
         print '<div class="seup-empty-state-icon">';
         print '<i class="fas fa-tags"></i>';
         print '</div>';
@@ -235,15 +239,16 @@ if ($resql) {
         print '</div>';
     }
 } else {
-    print '<div class="seup-alert seup-alert-error" style="margin-top: var(--seup-space-4);">' . $langs->trans('ErrorLoadingTags') . '</div>';
+    print '<div class="seup-alert seup-alert-error">' . $langs->trans('ErrorLoadingTags') . '</div>';
 }
 
-print '</div>'; // End existing tags section
 print '</div>'; // End card body
 print '</div>'; // End card
 print '</div>'; // End container
 
 // Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
+print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
 
 // End of page
 llxFooter();

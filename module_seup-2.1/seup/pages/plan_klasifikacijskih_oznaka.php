@@ -20,7 +20,32 @@ $res = 0;
 if (!$res && !empty($_SERVER["CONTEXT_DOCUMENT_ROOT"])) {
     $res = @include $_SERVER["CONTEXT_DOCUMENT_ROOT"] . "/main.inc.php";
 }
-// ... [rest of environment setup remains unchanged] ...
+$tmp = empty($_SERVER['SCRIPT_FILENAME']) ? '' : $_SERVER['SCRIPT_FILENAME'];
+$tmp2 = realpath(__FILE__);
+$i = strlen($tmp) - 1;
+$j = strlen($tmp2) - 1;
+while ($i > 0 && $j > 0 && isset($tmp[$i]) && isset($tmp2[$j]) && $tmp[$i] == $tmp2[$j]) {
+    $i--;
+    $j--;
+}
+if (!$res && $i > 0 && file_exists(substr($tmp, 0, ($i + 1)) . "/main.inc.php")) {
+    $res = @include substr($tmp, 0, ($i + 1)) . "/main.inc.php";
+}
+if (!$res && $i > 0 && file_exists(dirname(substr($tmp, 0, ($i + 1))) . "/main.inc.php")) {
+    $res = @include dirname(substr($tmp, 0, ($i + 1))) . "/main.inc.php";
+}
+if (!$res && file_exists("../main.inc.php")) {
+    $res = @include "../main.inc.php";
+}
+if (!$res && file_exists("../../main.inc.php")) {
+    $res = @include "../../main.inc.php";
+}
+if (!$res && file_exists("../../../main.inc.php")) {
+    $res = @include "../../../main.inc.php";
+}
+if (!$res) {
+    die("Include of main fails");
+}
 
 // Libraries
 require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
@@ -171,17 +196,49 @@ $tableHTML .= '</div>';
 $form = new Form($db);
 llxHeader("", $langs->trans("ClassificationMarks"), '', '', 0, 0, '', '', '', 'mod-seup page-oznake');
 
-// === BOOTSTRAP CDN ===
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">';
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
-print '<link href="/custom/seup/css/style.css" rel="stylesheet">';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-print '<div class="container mt-5 shadow-sm p-3 mb-5 bg-body rounded">';
-print '<div class="p-3 border rounded">';
-print '<div class="d-flex justify-content-between align-items-center mb-4">';
-print '<h4 class="mb-0">' . $langs->trans('ClassificationMarks') . '</h4>';
-print '<button type="button" class="btn btn-primary btn-sm" id="novaOznakaBtn">';
-print '<i class="fas fa-plus me-1"></i> ' . $langs->trans('NewClassificationMark'); // TODO napravi link na Postavke
+// Page Header
+print '<div class="seup-page-header">';
+print '<div class="seup-container">';
+print '<h1 class="seup-page-title">Plan Klasifikacijskih Oznaka</h1>';
+print '<div class="seup-breadcrumb">';
+print '<a href="../seupindex.php">SEUP</a>';
+print '<i class="fas fa-chevron-right"></i>';
+print '<span>Klasifikacijske Oznake</span>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+print '<div class="seup-container">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<h2 class="seup-heading-3" style="margin: 0;">' . $langs->trans('ClassificationMarks') . '</h2>';
+print '<a href="postavke.php" class="seup-btn seup-btn-primary seup-interactive">';
+print '<i class="fas fa-plus"></i> ' . $langs->trans('NewClassificationMark');
+print '</a>';
+print '</div>';
+print '</div>';
+print '<div class="seup-card-body">';
+print $tableHTML;
+print '</div>';
+print '<div class="seup-card-footer">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<div class="seup-text-small" style="color: var(--seup-gray-500);">';
+print '<i class="fas fa-info-circle"></i> Prikazano ' . count($oznake) . ' klasifikacijskih oznaka';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
+
+// Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
+print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
 llxFooter();
 $db->close();

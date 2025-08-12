@@ -169,148 +169,180 @@ $documentTableHTML = '';
 Predmet_helper::fetchUploadedDocuments($db, $conf, $documentTableHTML, $langs, $caseId);
 
 // === BOOTSTRAP CDN ===
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">';
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
-print '<link href="/custom/seup/css/style.css" rel="stylesheet">';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-print '<div class="container mt-5 shadow-sm p-3 mb-5 bg-body rounded">';
+// Page Header
+if ($caseDetails) {
+    print '<div class="seup-page-header">';
+    print '<div class="seup-container">';
+    print '<h1 class="seup-page-title">Predmet #' . $caseDetails->ID_predmeta . '</h1>';
+    print '<div class="seup-breadcrumb">';
+    print '<a href="../seupindex.php">SEUP</a>';
+    print '<i class="fas fa-chevron-right"></i>';
+    print '<a href="predmeti.php">Predmeti</a>';
+    print '<i class="fas fa-chevron-right"></i>';
+    print '<span>' . $caseDetails->klasa . '</span>';
+    print '</div>';
+    print '</div>';
+    print '</div>';
+} else {
+    print '<div class="seup-page-header">';
+    print '<div class="seup-container">';
+    print '<h1 class="seup-page-title">SEUP Sustav</h1>';
+    print '<div class="seup-breadcrumb">';
+    print '<a href="../seupindex.php">SEUP</a>';
+    print '<i class="fas fa-chevron-right"></i>';
+    print '<span>Početna</span>';
+    print '</div>';
+    print '</div>';
+    print '</div>';
+}
 
-// Tabovi
-print '
-<ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">
-      <i class="fas fa-home me-2"></i>Predmet
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">
-      <i class="fas fa-file-alt me-2"></i>Dokumenti u prilozima
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">
-      <i class="fas fa-search"></i>Predpregled
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab4-tab" data-bs-toggle="tab" data-bs-target="#tab4" type="button" role="tab" aria-controls="tab4" aria-selected="false">
-      <i class="fas fa-chart-bar me-2"></i>Šta god
-    </button>
-  </li>
-</ul>
+print '<div class="seup-container">';
 
-<div class="tab-content" id="myTabContent">';
+// Tab navigation
+print '<div class="seup-nav-tabs">';
+print '<button class="seup-nav-tab active" data-tab="tab1">';
+print '<i class="fas fa-home"></i> Predmet';
+print '</button>';
+print '<button class="seup-nav-tab" data-tab="tab2">';
+print '<i class="fas fa-file-alt"></i> Dokumenti u prilozima';
+print '</button>';
+print '<button class="seup-nav-tab" data-tab="tab3">';
+print '<i class="fas fa-search"></i> Predpregled';
+print '</button>';
+print '<button class="seup-nav-tab" data-tab="tab4">';
+print '<i class="fas fa-chart-bar"></i> Statistike';
+print '</button>';
+print '</div>';
+
+// Tab content
 
 // Tab 1 - Case Details or Welcome
-print '<div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">';
+print '<div class="seup-tab-pane active" id="tab1" style="display: block;">';
 if ($caseDetails) {
-    print '
-    <div class="p-3 border rounded">
-        <h4 class="mb-4">Detalji predmeta #' . $caseDetails->ID_predmeta . '</h4>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="fw-bold">Klasa:</label>
-                    <div class="badge bg-primary fs-6">' . $caseDetails->klasa . '</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold">Naziv predmeta:</label>
-                    <p>' . $caseDetails->naziv_predmeta . '</p>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold">Ustanova:</label>
-                    <p>' . $caseDetails->name_ustanova . '</p>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="fw-bold">Zaposlenik:</label>
-                    <p>' . $caseDetails->ime_prezime . '</p>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold">Datum otvaranja:</label>
-                    <p>' . $caseDetails->datum_otvaranja . '</p>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="fw-bold">Status:</label>
-                    <span class="badge bg-success">Aktivan</span>
-                </div>
-            </div>
-        </div>
-    </div>';
+    print '<div class="seup-card">';
+    print '<div class="seup-card-header">';
+    print '<h3 class="seup-heading-4" style="margin: 0;">Detalji predmeta #' . $caseDetails->ID_predmeta . '</h3>';
+    print '</div>';
+    print '<div class="seup-card-body">';
+    print '<div class="seup-grid seup-grid-2">';
+    
+    print '<div>';
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Klasa:</label>';
+    print '<div class="seup-badge seup-badge-primary" style="font-family: var(--seup-font-mono); font-size: 1rem;">' . $caseDetails->klasa . '</div>';
+    print '</div>';
+    
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Naziv predmeta:</label>';
+    print '<p class="seup-text-body">' . $caseDetails->naziv_predmeta . '</p>';
+    print '</div>';
+    
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Ustanova:</label>';
+    print '<p class="seup-text-body">' . $caseDetails->name_ustanova . '</p>';
+    print '</div>';
+    print '</div>';
+    
+    print '<div>';
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Zaposlenik:</label>';
+    print '<p class="seup-text-body">' . $caseDetails->ime_prezime . '</p>';
+    print '</div>';
+    
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Datum otvaranja:</label>';
+    print '<p class="seup-text-body">' . $caseDetails->datum_otvaranja . '</p>';
+    print '</div>';
+    
+    print '<div class="seup-form-group">';
+    print '<label class="seup-label">Status:</label>';
+    print '<span class="seup-status seup-status-active"><i class="fas fa-check-circle"></i> Aktivan</span>';
+    print '</div>';
+    print '</div>';
+    
+    print '</div>'; // End grid
+    print '</div>'; // End card body
+    print '</div>'; // End card
 } else {
-    print '
-    <div class="p-3 border rounded">
-        <div class="text-center py-5">
-            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-            <h4 class="mb-3">Dobrodošli</h4>
-            <p class="text-muted">Ovo je početna stranica. Za pregled predmeta posjetite stranicu Predmeti.</p>
-            <a href="predmeti.php" class="btn btn-primary mt-2">
-                <i class="fas fa-external-link-alt me-1"></i> Otvori Predmete
-            </a>
-        </div>
-    </div>';
+    print '<div class="seup-card">';
+    print '<div class="seup-card-body">';
+    print '<div class="seup-empty-state">';
+    print '<div class="seup-empty-state-icon">';
+    print '<i class="fas fa-folder-open"></i>';
+    print '</div>';
+    print '<h3 class="seup-empty-state-title">Dobrodošli</h3>';
+    print '<p class="seup-empty-state-description">Ovo je početna stranica. Za pregled predmeta posjetite stranicu Predmeti.</p>';
+    print '<a href="predmeti.php" class="seup-btn seup-btn-primary">';
+    print '<i class="fas fa-external-link-alt"></i> Otvori Predmete';
+    print '</a>';
+    print '</div>';
+    print '</div>';
+    print '</div>';
 }
 print '</div>
 
-  <!-- Tab 2 - Documents -->
-  <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
-  <div class="p-3 border rounded">
-    <h4 class="mb-3">Akti i prilozi</h4>
-    <p>Pregled dodanih priloga sa datumom kreiranja i kreatorom</p>
-    ' . $documentTableHTML . '
-    <div class="mt-3 d-flex gap-2">
-      <!-- Add these 2 lines -->
-      <button type="button" id="uploadTrigger" class="btn btn-primary btn-sm">
-        <i class="fas fa-upload me-1"></i> Dodaj dokument
-      </button>
-      <input type="file" id="documentInput" style="display: none;">
-      
-      <!-- Keep your other buttons -->
-      <button type="button" class="btn btn-secondary btn-sm">Dugme 2</button>
-      <button type="button" class="btn btn-success btn-sm">Dugme 3</button>
-    </div>
-  </div>
-</div>
+// Tab 2 - Documents
+print '<div class="seup-tab-pane" id="tab2" style="display: none;">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h3 class="seup-heading-4" style="margin: 0;">Akti i prilozi</h3>';
+print '<p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Pregled dodanih priloga sa datumom kreiranja i kreatorom</p>';
+print '</div>';
+print '<div class="seup-card-body">';
+print $documentTableHTML;
+print '<div class="seup-flex seup-gap-2" style="margin-top: var(--seup-space-4);">';
+print '<button type="button" id="uploadTrigger" class="seup-btn seup-btn-primary">';
+print '<i class="fas fa-upload"></i> Dodaj dokument';
+print '</button>';
+print '<input type="file" id="documentInput" style="display: none;">';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 2</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 3</button>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-  <!-- Tab 3 - Preview -->
-  <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
-    <div class="p-3 border rounded">
-      <h4 class="mb-3">Predpregled omota sposa sa listom priloga</h4>
-      <p>Bumo vidli kako</p>
-      <div class="mt-3 d-flex gap-2">
-        <button type="button" class="btn btn-primary btn-sm" data-action="generate_pdf">Kreiraj PDF</button>
-        <button type="button" class="btn btn-secondary btn-sm">Dugme 2</button>
-        <button type="button" class="btn btn-success btn-sm">Dugme 3</button>
-      </div>
-    </div>
-  </div>
+// Tab 3 - Preview
+print '<div class="seup-tab-pane" id="tab3" style="display: none;">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h3 class="seup-heading-4" style="margin: 0;">Predpregled omota sposa sa listom priloga</h3>';
+print '</div>';
+print '<div class="seup-card-body">';
+print '<p class="seup-text-body">Bumo vidli kako</p>';
+print '<div class="seup-flex seup-gap-2" style="margin-top: var(--seup-space-4);">';
+print '<button type="button" class="seup-btn seup-btn-primary" data-action="generate_pdf">Kreiraj PDF</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 2</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 3</button>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-  <!-- Tab 4 - Stats -->
-  <div class="tab-pane fade" id="tab4" role="tabpanel" aria-labelledby="tab4-tab">
-    <div class="p-3 border rounded">
-      <h4 class="mb-3">Statistički podaci</h4>
-      <p>Možda evidencije logiranja i provedenog vremena</p>
-      <div class="mt-3 d-flex gap-2">
-        <button type="button" class="btn btn-primary btn-sm">Dugme 1</button>
-        <button type="button" class="btn btn-secondary btn-sm">Dugme 2</button>
-        <button type="button" class="btn btn-success btn-sm">Dugme 3</button>
-      </div>
-    </div>
-  </div>
-</div>
-</div>';
+// Tab 4 - Stats
+print '<div class="seup-tab-pane" id="tab4" style="display: none;">';
+print '<div class="seup-card">';
+print '<div class="seup-card-header">';
+print '<h3 class="seup-heading-4" style="margin: 0;">Statistički podaci</h3>';
+print '</div>';
+print '<div class="seup-card-body">';
+print '<p class="seup-text-body">Možda evidencije logiranja i provedenog vremena</p>';
+print '<div class="seup-flex seup-gap-2" style="margin-top: var(--seup-space-4);">';
+print '<button type="button" class="seup-btn seup-btn-primary">Dugme 1</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 2</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary">Dugme 3</button>';
+print '</div>';
+print '</div>';
+print '</div>';
+print '</div>';
 
-// Bootstrap JS
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
+print '</div>'; // End container
 
 // Load modern JavaScript
 print '<script src="/custom/seup/js/seup-modern.js"></script>';
@@ -322,31 +354,6 @@ print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Modern tab functionality
-        const tabs = document.querySelectorAll('.seup-nav-tab');
-        const tabPanes = document.querySelectorAll('.seup-tab-pane');
-        
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.getAttribute('data-tab');
-                
-                // Remove active class from all tabs and panes
-                tabs.forEach(t => t.classList.remove('active'));
-                tabPanes.forEach(pane => {
-                    pane.style.display = 'none';
-                    pane.classList.remove('active');
-                });
-                
-                // Add active class to clicked tab and corresponding pane
-                tab.classList.add('active');
-                const targetPane = document.getElementById(targetTab);
-                if (targetPane) {
-                    targetPane.style.display = 'block';
-                    targetPane.classList.add('active', 'seup-fade-in');
-                }
-            });
-        });
-        
         // Get elements safely
         const uploadTrigger = document.getElementById("uploadTrigger");
         const documentInput = document.getElementById("documentInput");
