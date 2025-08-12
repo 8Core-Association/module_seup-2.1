@@ -359,26 +359,18 @@ print '</div>';
 // Color Filter with Checkboxes
 print '<div class="seup-form-group">';
 print '<label class="seup-label">Filter po boji</label>';
-print '<div class="color-filter-checkboxes">';
+print '<div class="color-filter-grid">';
 
-// All colors checkbox
-print '<label class="color-filter-checkbox">';
-print '<input type="checkbox" data-color="all" checked>';
-print '<span class="checkbox-custom">';
-print '<span class="color-dot" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);"></span>';
-print '</span>';
-print '<span>Sve boje</span>';
-print '</label>';
+// All colors option
+print '<div class="color-filter-option active" data-color="all" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);">';
+print '<i class="fas fa-check"></i>';
+print '</div>';
 
-// Individual color checkboxes
+// Individual color options
 foreach ($colors as $colorName => $colorHex) {
-    print '<label class="color-filter-checkbox">';
-    print '<input type="checkbox" data-color="' . $colorName . '" checked>';
-    print '<span class="checkbox-custom">';
-    print '<span class="color-dot" style="background-color: ' . $colorHex . ';"></span>';
-    print '</span>';
-    print '<span>' . ucfirst($colorName) . '</span>';
-    print '</label>';
+    print '<div class="color-filter-option active" data-color="' . $colorName . '" style="background-color: ' . $colorHex . ';">';
+    print '<i class="fas fa-check"></i>';
+    print '</div>';
 }
 
 print '</div>';
@@ -512,61 +504,49 @@ print '<script src="/custom/seup/js/seup-modern.js"></script>';
 }
 
 /* Color filter checkboxes */
-.color-filter-checkboxes {
+.color-filter-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     margin-top: 8px;
 }
 
-.color-filter-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.color-filter-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
     transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-
-.color-filter-checkbox:hover {
-    background-color: #f8fafc;
-}
-
-.color-filter-checkbox input[type="checkbox"] {
-    display: none;
-}
-
-.checkbox-custom {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #cbd5e1;
-    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    border: 2px solid transparent;
     position: relative;
+    opacity: 0.6;
 }
 
-.color-filter-checkbox input:checked + .checkbox-custom {
-    border-color: #2563eb;
-    background-color: #2563eb;
+.color-filter-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 1;
 }
 
-.color-filter-checkbox input:checked + .checkbox-custom::after {
-    content: '✓';
+.color-filter-option.active {
+    border-color: #1f2937;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+}
+
+.color-filter-option i {
     color: white;
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    display: none;
 }
 
-.color-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.color-filter-option.active i {
+    display: block;
 }
 
 /* Tags list styles */
@@ -818,43 +798,47 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search functionality
     const searchInput = document.getElementById('searchTags');
     const tagItems = document.querySelectorAll('.tag-item');
-    const colorCheckboxes = document.querySelectorAll('input[type="checkbox"][data-color]');
+    const colorFilterOptions = document.querySelectorAll('.color-filter-option');
     
     let activeColors = new Set(['all', 'blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow']);
     
     // Color filter functionality
-    colorCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
+    colorFilterOptions.forEach(option => {
+        option.addEventListener('click', function() {
             const color = this.getAttribute('data-color');
             
             if (color === 'all') {
-                if (this.checked) {
+                if (this.classList.contains('active')) {
+                    // Deactivate all
+                    activeColors = new Set();
+                    colorFilterOptions.forEach(opt => opt.classList.remove('active'));
+                } else {
                     // Check all colors
                     activeColors = new Set(['all', 'blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow']);
-                    colorCheckboxes.forEach(cb => cb.checked = true);
-                } else {
-                    // Uncheck all colors
-                    activeColors = new Set();
-                    colorCheckboxes.forEach(cb => cb.checked = false);
+                    colorFilterOptions.forEach(opt => opt.classList.add('active'));
                 }
             } else {
-                if (this.checked) {
-                    activeColors.add(color);
-                } else {
+                if (this.classList.contains('active')) {
+                    // Deactivate this color
+                    this.classList.remove('active');
                     activeColors.delete(color);
-                    // Uncheck "all" if any individual color is unchecked
-                    const allCheckbox = document.querySelector('input[data-color="all"]');
-                    if (allCheckbox) allCheckbox.checked = false;
+                    // Deactivate "all" if any individual color is deactivated
+                    const allOption = document.querySelector('.color-filter-option[data-color="all"]');
+                    if (allOption) allOption.classList.remove('active');
                     activeColors.delete('all');
-                }
-                
-                // Check "all" if all individual colors are checked
-                const individualColors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
-                const allIndividualChecked = individualColors.every(c => activeColors.has(c));
-                if (allIndividualChecked) {
-                    const allCheckbox = document.querySelector('input[data-color="all"]');
-                    if (allCheckbox) allCheckbox.checked = true;
-                    activeColors.add('all');
+                } else {
+                    // Activate this color
+                    this.classList.add('active');
+                    activeColors.add(color);
+                    
+                    // Check "all" if all individual colors are active
+                    const individualColors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
+                    const allIndividualActive = individualColors.every(c => activeColors.has(c));
+                    if (allIndividualActive) {
+                        const allOption = document.querySelector('.color-filter-option[data-color="all"]');
+                        if (allOption) allOption.classList.add('active');
+                        activeColors.add('all');
+                    }
                 }
             }
             
