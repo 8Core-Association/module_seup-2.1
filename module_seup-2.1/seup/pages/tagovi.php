@@ -345,18 +345,28 @@ print '</div>';
 // Color Filter
 print '<div class="seup-form-group">';
 print '<label class="seup-label">Filter po boji</label>';
-print '<div class="seup-color-filter">';
-print '<button class="seup-color-filter-btn active" data-color="all">';
-print '<span class="seup-color-dot" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);"></span>';
-print 'Sve boje';
-print '</button>';
+print '<div class="seup-color-filter-checkboxes">';
+print '<div class="seup-checkbox-group">';
+print '<label class="seup-checkbox-label">';
+print '<input type="checkbox" class="seup-checkbox" data-color="all" checked>';
+print '<span class="seup-checkbox-custom">';
+print '<span class="seup-color-dot" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);"></span>';
+print '</span>';
+print '<span>Sve boje</span>';
+print '</label>';
+print '</div>';
 
 $colors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
 foreach ($colors as $color) {
-    print '<button class="seup-color-filter-btn" data-color="' . $color . '">';
+    print '<div class="seup-checkbox-group">';
+    print '<label class="seup-checkbox-label">';
+    print '<input type="checkbox" class="seup-checkbox" data-color="' . $color . '" checked>';
+    print '<span class="seup-checkbox-custom">';
     print '<span class="seup-color-dot seup-tag-' . $color . '"></span>';
-    print ucfirst($color);
-    print '</button>';
+    print '</span>';
+    print '<span>' . ucfirst($color) . '</span>';
+    print '</label>';
+    print '</div>';
 }
 print '</div>';
 print '</div>';
@@ -386,7 +396,7 @@ if ($resql) {
             print '<div class="seup-tag-card-compact seup-interactive" data-tag="' . strtolower($obj->tag) . '" data-color="' . $tagColor . '">';
             
             print '<div class="seup-tag-card-header-compact">';
-            print '<div class="seup-tag seup-tag-' . $tagColor . '">';
+            print '<div class="seup-tag seup-tag-' . $tagColor . '" style="background: var(--seup-' . $tagColor . '-100); color: var(--seup-' . $tagColor . '-700); border-color: var(--seup-' . $tagColor . '-300);">';
             print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
             print '</div>';
             print '<div class="seup-tag-actions">';
@@ -548,21 +558,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Color filter functionality
-    colorFilterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Remove active class from all buttons
-            colorFilterBtns.forEach(b => b.classList.remove('active'));
+    const colorCheckboxes = document.querySelectorAll('.seup-checkbox[data-color]');
+    let activeColors = new Set(['all', 'blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow']);
+    
+    colorCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const color = this.getAttribute('data-color');
             
-            // Add active class to clicked button
-            this.classList.add('active');
+            if (color === 'all') {
+                if (this.checked) {
+                    // Check all colors
+                    activeColors = new Set(['all', 'blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow']);
+                    colorCheckboxes.forEach(cb => cb.checked = true);
+                } else {
+                    // Uncheck all colors
+                    activeColors = new Set();
+                    colorCheckboxes.forEach(cb => cb.checked = false);
+                }
+            } else {
+                if (this.checked) {
+                    activeColors.add(color);
+                } else {
+                    activeColors.delete(color);
+                    // Uncheck "all" if any individual color is unchecked
+                    const allCheckbox = document.querySelector('.seup-checkbox[data-color="all"]');
+                    if (allCheckbox) allCheckbox.checked = false;
+                    activeColors.delete('all');
+                }
+                
+                // Check "all" if all individual colors are checked
+                const individualColors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
+                const allIndividualChecked = individualColors.every(c => activeColors.has(c));
+                if (allIndividualChecked) {
+                    const allCheckbox = document.querySelector('.seup-checkbox[data-color="all"]');
+                    if (allCheckbox) allCheckbox.checked = true;
+                    activeColors.add('all');
+                }
+            }
             
-            // Update current filter
-            currentColorFilter = this.getAttribute('data-color');
-            
-            // Apply filter
             filterTags();
         });
     });
+    
+    function filterTags() {
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        
+        tagCards.forEach(card => {
+            const tagName = card.getAttribute('data-tag');
+            const tagColor = card.getAttribute('data-color');
+            
+            const matchesSearch = !searchTerm || tagName.includes(searchTerm);
+            const matchesColor = activeColors.has('all') || activeColors.has(tagColor);
+            
+            if (matchesSearch && matchesColor) {
+                card.style.display = 'block';
+                card.classList.add('seup-fade-in');
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('seup-fade-in');
+            }
+        });
+    }
     
     // Form submission with loading state
     const tagForm = document.getElementById('tagForm');
