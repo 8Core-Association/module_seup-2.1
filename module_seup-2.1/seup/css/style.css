@@ -45,7 +45,7 @@
 
 .autocomplete-dropdown {
   position: absolute;
-  z-index: 1000;
+  z-index: 99999;
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
