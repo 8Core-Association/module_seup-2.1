@@ -318,6 +318,31 @@ print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstr
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Modern tab functionality
+        const tabs = document.querySelectorAll('.seup-nav-tab');
+        const tabPanes = document.querySelectorAll('.seup-tab-pane');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and panes
+                tabs.forEach(t => t.classList.remove('active'));
+                tabPanes.forEach(pane => {
+                    pane.style.display = 'none';
+                    pane.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab and corresponding pane
+                tab.classList.add('active');
+                const targetPane = document.getElementById(targetTab);
+                if (targetPane) {
+                    targetPane.style.display = 'block';
+                    targetPane.classList.add('active', 'seup-fade-in');
+                }
+            });
+        });
+        
         // Get elements safely
         const uploadTrigger = document.getElementById("uploadTrigger");
         const documentInput = document.getElementById("documentInput");

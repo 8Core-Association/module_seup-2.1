@@ -168,141 +168,155 @@ $klasaMapJson = '';
 Predmet_helper::fetchDropdownData($db, $langs, $klasaOptions, $klasaMapJson, $zaposlenikOptions);
 
 
-// === BOOTSTRAP CDN DODAVANJE ===
-// Meta tag za responzivnost
+// Modern SEUP Styles
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
-// Bootstrap CSS
-print '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">';
-// Add flatpickr CDN links
+print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
+print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
 print '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">';
-print '<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>';
-print '<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hr.js"></script>';
-
-// Create single input fields for dates
-$strankaDateHTML = '<input type="text" class="form-control flatpickr-date" name="strankaDatumOtvaranja" placeholder="Odaberi datum">';
-$datumOtvaranjaHTML = '<input type="text" class="form-control flatpickr-date" name="datumOtvaranja" placeholder="Odaberi datum">';
-
-
-// Custom style 8Core
-print '<link href="/custom/seup/css/style.css" rel="stylesheet">';
-
 print '<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />';
-print '<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>';
+print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-//Kec ispod ovoga ti je sve što ti treba //
+// Create modern date inputs
+$strankaDateHTML = '<input type="text" class="seup-input flatpickr-date" name="strankaDatumOtvaranja" placeholder="Odaberi datum">';
+$datumOtvaranjaHTML = '<input type="text" class="seup-input flatpickr-date" name="datumOtvaranja" placeholder="Odaberi datum">';
 
-print '<div class="container mt-5 shadow-sm p-3 mb-5 bg-body rounded">';
+// Page Header
+print '<div class="seup-page-header">';
+print '<div class="seup-container">';
+print '<h1 class="seup-page-title">Novi Predmet</h1>';
+print '<div class="seup-breadcrumb">';
+print '<a href="../seupindex.php">SEUP</a>';
+print '<i class="fas fa-chevron-right"></i>';
+print '<span>Novi Predmet</span>';
+print '</div>';
+print '</div>';
+print '</div>';
 
+print '<div class="seup-container">';
 
 $htmlContent = <<<HTML
-<div class="container mt-5 shadow-sm p-3 mb-5 bg-body rounded">
-    <h4 class="mb-3">Klasa</h4>
-    <p id="klasa-value">$klasa_text</p>
+<div class="seup-card seup-slide-up">
+    <div class="seup-card-header">
+        <h2 class="seup-heading-3" style="margin: 0;">Kreiranje Novog Predmeta</h2>
+        <p class="seup-text-body" style="margin: var(--seup-space-2) 0 0 0;">Unesite podatke za novi predmet u sustav</p>
+    </div>
+    <div class="seup-card-body">
+        <div class="seup-form-group">
+            <label class="seup-label">Klasa Predmeta</label>
+            <div class="seup-badge seup-badge-primary" id="klasa-value" style="font-family: var(--seup-font-mono); font-size: 1rem; padding: var(--seup-space-3) var(--seup-space-4);">$klasa_text</div>
+        </div>
     
-    <div class="row g-3 mt-3">
-      <div class="col-md-6">
-        <div class="p-3 border rounded h-100">
-          <h5 class="mb-3">Odabir parametara klase</h5>
+        <div class="seup-grid seup-grid-2">
+            <div class="seup-card" style="border: 1px solid var(--seup-gray-200);">
+                <div class="seup-card-header">
+                    <h3 class="seup-heading-4" style="margin: 0;">Parametri Klase</h3>
+                </div>
+                <div class="seup-card-body">
           
-          <div class="mb-3">
-            <label for="klasa_br">{$langs->trans("Klasa broj")}:</label>
-            <select name="klasa_br" id="klasa_br" class="form-select">
-              $klasaOptions
-            </select>
-          </div>
+                    <div class="seup-form-group">
+                        <label for="klasa_br" class="seup-label">{$langs->trans("Klasa broj")}</label>
+                        <select name="klasa_br" id="klasa_br" class="seup-select">
+                            $klasaOptions
+                        </select>
+                    </div>
 
-          <div class="mb-3">
-            <label for="sadrzaj">{$langs->trans("Sadrzaj")}:</label>
-            <select name="sadrzaj" id="sadrzaj" class="form-select" data-placeholder="{$langs->trans("Odaberi Sadrzaj")}">
-              <option value="">{$langs->trans("Odaberi Sadrzaj")}</option>
-            </select>
-          </div>
+                    <div class="seup-form-group">
+                        <label for="sadrzaj" class="seup-label">{$langs->trans("Sadrzaj")}</label>
+                        <select name="sadrzaj" id="sadrzaj" class="seup-select" data-placeholder="{$langs->trans("Odaberi Sadrzaj")}">
+                            <option value="">{$langs->trans("Odaberi Sadrzaj")}</option>
+                        </select>
+                    </div>
 
-          <div class="mb-3">
-            <label for="dosjeBroj">{$langs->trans("Dosje Broj")}:</label>
-            <select name="dosjeBroj" id="dosjeBroj" class="form-select" data-placeholder="{$langs->trans("Odaberi Dosje Broj")}">
-              <option value="">{$langs->trans("Odaberi Dosje Broj")}</option>
-            </select>
-          </div>
+                    <div class="seup-form-group">
+                        <label for="dosjeBroj" class="seup-label">{$langs->trans("Dosje Broj")}</label>
+                        <select name="dosjeBroj" id="dosjeBroj" class="seup-select" data-placeholder="{$langs->trans("Odaberi Dosje Broj")}">
+                            <option value="">{$langs->trans("Odaberi Dosje Broj")}</option>
+                        </select>
+                    </div>
           
-          <div class="mb-3">
-            <label for="zaposlenik" class="form-label">{$langs->trans("Zaposlenik")}</label>
-            <select class="form-select text-black" id="zaposlenik" name="zaposlenik" required>
-              $zaposlenikOptions
-            </select>
-          </div>
+                    <div class="seup-form-group">
+                        <label for="zaposlenik" class="seup-label">{$langs->trans("Zaposlenik")}</label>
+                        <select class="seup-select" id="zaposlenik" name="zaposlenik" required>
+                            $zaposlenikOptions
+                        </select>
+                    </div>
 
-          <div class="mb-3">
-            <label for="stranka" class="form-label">{$langs->trans("Stranka")}</label>
-            <div class="d-flex align-items-center gap-2">
-                <select class="form-select" id="stranka" name="stranka" disabled style="flex:4;"></select>
-                <div class="d-flex align-items-center match-height" style="flex: 1;">
-                    <input type="checkbox" class="btn-check" id="strankaCheck" autocomplete="off">
-                    <label class="btn btn-outline-secondary w-100 text-nowrap d-flex align-items-center justify-content-center" 
-                          for="strankaCheck" id="strankaCheckLabel" 
-                          style="padding: 0.25rem 0.5rem; font-size: 0.875rem;">
+                    <div class="seup-form-group">
+                        <label for="stranka" class="seup-label">{$langs->trans("Stranka")}</label>
+                        <div class="seup-flex seup-gap-2">
+                            <select class="seup-select" id="stranka" name="stranka" disabled style="flex: 1;"></select>
+                            <div class="seup-flex seup-items-center">
+                                <input type="checkbox" id="strankaCheck" autocomplete="off" style="display: none;">
+                                <label class="seup-btn seup-btn-secondary" for="strankaCheck" id="strankaCheckLabel" style="white-space: nowrap;">
                         Otvorila stranka?
-                    </label>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="strankaDatumContainer" class="seup-form-group" style="display:none; margin-top: var(--seup-space-4);">
+                            <label for="strankaDatumOtvaranja" class="seup-label">Datum otvaranja predmeta od strane stranke</label>
+                            $strankaDateHTML
+                            <div id="strankaDateError" class="seup-field-error" style="display: none;">
+                                Odaberite datum otvaranja predmeta!
+                            </div>
+                        </div>
+                        <div id="strankaError" class="seup-field-error" style="display: none;">
+                            Odaberite stranku!
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="strankaDatumContainer" class="mt-2" style="display:none;">
-              <label for="strankaDatumOtvaranja" class="form-label">Datum otvaranja predmeta od strane stranke</label>
-              <div class="mb-1">
-              $strankaDateHTML
-              </div>
-              <div id="strankaDateError" class="invalid-feedback" style="display: none;">
-                  Odaberite datum otvaranja predmeta!
-              </div>
-            </div>
-            <div id="strankaError" class="invalid-feedback" style="display: none;">
-                Odaberite stranku! (Required when checkbox is checked)
-            </div>
-          </div>
-        </div>
-      </div>
       
-      <div class="col-md-6">
-        <div class="p-3 border rounded h-100 bg-light">
-          <label for="naziv" class="form-label h5">Naziv Predmeta</label>
-          <textarea class="form-control" id="naziv" name="naziv" rows="8" maxlength="500" placeholder="Unesite naziv predmeta (maksimalno 500 znakova)" style="resize: none;"></textarea>
-          <div class="mt-3">
-            <label for="datumOtvaranja" class="form-label">Datum Otvaranja Predmeta</label>
-            <div class="mb-1">
-              $datumOtvaranjaHTML
+            <div class="seup-card" style="border: 1px solid var(--seup-gray-200);">
+                <div class="seup-card-header">
+                    <h3 class="seup-heading-4" style="margin: 0;">Detalji Predmeta</h3>
+                </div>
+                <div class="seup-card-body">
+                    <div class="seup-form-group">
+                        <label for="naziv" class="seup-label">Naziv Predmeta</label>
+                        <textarea class="seup-textarea" id="naziv" name="naziv" rows="6" maxlength="500" placeholder="Unesite naziv predmeta (maksimalno 500 znakova)" style="resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div class="seup-form-group">
+                        <label for="datumOtvaranja" class="seup-label">Datum Otvaranja Predmeta</label>
+                        $datumOtvaranjaHTML
+                        <small class="seup-text-small" style="margin-top: var(--seup-space-1); display: block;">Ostavite prazno za današnji datum</small>
+                    </div>
+                    
+                    <div class="seup-form-group">
+                        <label class="seup-label">{$langs->trans('Oznake')}</label>
+                        <div class="seup-flex seup-gap-2" style="margin-bottom: var(--seup-space-3);">
+                            <div class="seup-dropdown" style="flex: 1;">
+                                <button class="seup-btn seup-btn-secondary" type="button" id="tagsDropdown" style="width: 100%; justify-content: space-between;">
+                                    Odaberi oznake
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div class="seup-dropdown-menu" id="tags-dropdown-menu" style="display: none;">
+                                    <div style="padding: var(--seup-space-3); display: flex; flex-wrap: wrap; gap: var(--seup-space-2);" id="available-tags">
+                                        {$availableTagsHTML}
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="seup-btn seup-btn-primary" type="button" id="add-tag-btn">
+                                <i class="fas fa-plus"></i> Dodaj
+                            </button>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: var(--seup-space-2);" id="selected-tags"></div>
+                    </div>
+                </div>
             </div>
-            <small class="form-text text-muted">Ostavite prazno za današnji datum</small>
-          </div>
-          <div class="mt-3">
-              <label class="form-label">{$langs->trans('Oznake')}</label>
-              <div class="input-group mb-2">
-                  <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" 
-                          type="button" 
-                          id="tagsDropdown" 
-                          data-bs-toggle="dropdown" 
-                          aria-expanded="false">
-                      Odaberi oznake
-                  </button>
-                  <div class="dropdown-menu p-2" aria-labelledby="tagsDropdown" style="width: 100%">
-                      <div class="d-flex flex-wrap gap-1" id="available-tags">
-                          {$availableTagsHTML}
-                      </div>
-                  </div>
-                  <button class="btn btn-outline-primary" type="button" id="add-tag-btn">
-                      Dodaj
-                  </button>
-              </div>
-              <div class="d-flex flex-wrap gap-1 mt-2" id="selected-tags"></div>
-          </div>
-        </div> <!-- end p-3 border -->
-      </div> <!-- end col-md-6 -->
-    </div> <!-- end row -->
+        </div>
     
-    <div class="mt-3 d-flex gap-2">
-      <div class="mt-3">
-          <button type="button" class="btn btn-primary btn-sm" id="otvoriPredmetBtn">Otvori Predmet</button>
-      </div>
+        <div class="seup-card-footer">
+            <div class="seup-flex seup-justify-between seup-items-center">
+                <div class="seup-text-small" style="color: var(--seup-gray-500);">
+                    <i class="fas fa-info-circle"></i> Sva polja označena * su obavezna
+                </div>
+                <button type="button" class="seup-btn seup-btn-primary seup-btn-lg seup-interactive" id="otvoriPredmetBtn">
+                    <i class="fas fa-plus"></i> Otvori Predmet
+                </button>
+            </div>
+        </div>
     </div>
-</div>
 HTML;
 
 // Print the HTML content
@@ -838,19 +852,35 @@ $db->close();
   let selectedOption = null;
 
   // Make tag options selectable
+  // Enhanced dropdown functionality
+  tagsDropdown.addEventListener("click", function(e) {
+    e.preventDefault();
+    const menu = document.getElementById("tags-dropdown-menu");
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest('.seup-dropdown')) {
+      document.getElementById("tags-dropdown-menu").style.display = 'none';
+    }
+  });
+
   availableTags.addEventListener("click", function(e) {
     if (e.target.classList.contains("tag-option")) {
       // Remove active class from all options
       document.querySelectorAll('.tag-option').forEach(btn => {
-        btn.classList.remove('active');
+        btn.classList.remove('seup-btn-primary');
+        btn.classList.add('seup-btn-secondary');
       });
 
       // Set active class on clicked option
-      e.target.classList.add('active');
+      e.target.classList.remove('seup-btn-secondary');
+      e.target.classList.add('seup-btn-primary');
       selectedOption = e.target;
 
       // Update dropdown button text
-      tagsDropdown.textContent = e.target.textContent;
+      tagsDropdown.innerHTML = `${e.target.textContent} <i class="fas fa-chevron-down"></i>`;
     }
   });
 
@@ -866,27 +896,31 @@ $db->close();
       selectedTags.add(tagId);
 
       // Create selected tag badge
-      const tagElement = document.createElement("span");
-      tagElement.className = "badge bg-primary rounded-pill p-2 d-flex align-items-center";
+      const tagElement = document.createElement("div");
+      tagElement.className = "seup-tag seup-tag-removable";
       tagElement.dataset.tagId = tagId;
       tagElement.innerHTML = `
             ${tagName}
-            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Remove"></button>
+            <button type="button" class="seup-tag-remove" aria-label="Remove">
+                <i class="fas fa-times"></i>
+            </button>
         `;
 
       selectedTagsContainer.appendChild(tagElement);
 
       // Reset selection
-      selectedOption.classList.remove('active');
+      selectedOption.classList.remove('seup-btn-primary');
+      selectedOption.classList.add('seup-btn-secondary');
       selectedOption = null;
-      tagsDropdown.textContent = "Odaberi oznake";
+      tagsDropdown.innerHTML = 'Odaberi oznake <i class="fas fa-chevron-down"></i>';
+      document.getElementById("tags-dropdown-menu").style.display = 'none';
     }
   });
 
   // Remove tag from selection
   selectedTagsContainer.addEventListener("click", function(e) {
-    if (e.target.classList.contains("btn-close")) {
-      const tagElement = e.target.closest(".badge");
+    if (e.target.closest(".seup-tag-remove")) {
+      const tagElement = e.target.closest(".seup-tag");
       const tagId = tagElement.dataset.tagId;
 
       selectedTags.delete(tagId);

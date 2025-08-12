@@ -81,9 +81,9 @@ if ($resql) {
 }
 
 // Generate HTML table
-$tableHTML = '<div class="table-responsive">';
-$tableHTML .= '<table class="table table-hover table-striped">';
-$tableHTML .= '<thead class="table-light">';
+$tableHTML = '<div style="overflow-x: auto;">';
+$tableHTML .= '<table class="seup-table">';
+$tableHTML .= '<thead>';
 $tableHTML .= '<tr>';
 
 // Function to generate sortable header
@@ -98,7 +98,7 @@ function sortableHeader($field, $label, $currentSort, $currentOrder)
             : ' <i class="fas fa-arrow-down"></i>';
     }
 
-    return '<th class="sortable-header">' .
+    return '<th class="seup-sortable-header">' .
         '<a href="?sort=' . $field . '&order=' . $newOrder . '">' .
         $label . $icon .
         '</a></th>';
@@ -140,11 +140,11 @@ if (count($oznake)) {
 
         // Action buttons
         $tableHTML .= '<td>';
-        $tableHTML .= '<div class="btn-group btn-group-sm">';
-        $tableHTML .= '<a href="edit_oznaka.php?id=' . $oznaka->ID_klasifikacijske_oznake . '" class="btn btn-outline-secondary" title="' . $langs->trans('Edit') . '">';
+        $tableHTML .= '<div class="seup-flex seup-gap-2">';
+        $tableHTML .= '<a href="edit_oznaka.php?id=' . $oznaka->ID_klasifikacijske_oznake . '" class="seup-btn seup-btn-sm seup-btn-ghost seup-tooltip" data-tooltip="' . $langs->trans('Edit') . '">';
         $tableHTML .= '<i class="fas fa-edit"></i>';
         $tableHTML .= '</a>';
-        $tableHTML .= '<a href="#" class="btn btn-outline-danger" title="' . $langs->trans('Delete') . '">';
+        $tableHTML .= '<a href="#" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="' . $langs->trans('Delete') . '">';
         $tableHTML .= '<i class="fas fa-trash"></i>';
         $tableHTML .= '</a>';
         $tableHTML .= '</div>';
@@ -153,15 +153,20 @@ if (count($oznake)) {
         $tableHTML .= '</tr>';
     }
 } else {
-    $tableHTML .= '<tr><td colspan="7" class="text-center text-muted py-4">';
-    $tableHTML .= '<i class="fas fa-tags fa-2x mb-2"></i><br>';
-    $tableHTML .= $langs->trans('NoClassificationMarks');
+    $tableHTML .= '<tr><td colspan="7">';
+    $tableHTML .= '<div class="seup-empty-state">';
+    $tableHTML .= '<div class="seup-empty-state-icon">';
+    $tableHTML .= '<i class="fas fa-tags"></i>';
+    $tableHTML .= '</div>';
+    $tableHTML .= '<h3 class="seup-empty-state-title">' . $langs->trans('NoClassificationMarks') . '</h3>';
+    $tableHTML .= '<p class="seup-empty-state-description">Dodajte novu klasifikacijsku oznaku za početak</p>';
+    $tableHTML .= '</div>';
     $tableHTML .= '</td></tr>';
 }
 
 $tableHTML .= '</tbody>';
 $tableHTML .= '</table>';
-$tableHTML .= '</div>'; // table-responsive
+$tableHTML .= '</div>';
 
 $form = new Form($db);
 llxHeader("", $langs->trans("ClassificationMarks"), '', '', 0, 0, '', '', '', 'mod-seup page-oznake');

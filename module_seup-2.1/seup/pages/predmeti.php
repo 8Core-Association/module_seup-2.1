@@ -115,9 +115,9 @@ if ($resql) {
 }
 
 // Generate HTML table
-$predmetTableHTML = '<div class="table-responsive">';
-$predmetTableHTML .= '<table class="table table-hover table-striped">';
-$predmetTableHTML .= '<thead class="table-light">';
+$predmetTableHTML = '<div style="overflow-x: auto;">';
+$predmetTableHTML .= '<table class="seup-table">';
+$predmetTableHTML .= '<thead>';
 $predmetTableHTML .= '<tr>';
 
 // Function to generate sortable header
@@ -132,7 +132,7 @@ function sortableHeader($field, $label, $currentSort, $currentOrder)
             : ' <i class="fas fa-arrow-down"></i>';
     }
 
-    return '<th class="sortable-header">' .
+    return '<th class="seup-sortable-header">' .
         '<a href="?sort=' . $field . '&order=' . $newOrder . '">' .
         $label . $icon .
         '</a></th>';
@@ -160,20 +160,20 @@ if (count($predmeti)) {
         $predmetTableHTML .= '<td>' . $predmet->ID_predmeta . '</td>';
         // Make Klasa badge clickable
         $url = dol_buildpath('/custom/seup/pages/predmet.php', 1) . '?id=' . $predmet->ID_predmeta;
-        $predmetTableHTML .= '<td><a href="' . $url . '" class="badge bg-primary text-decoration-none">' . $klasa . '</a></td>';
+        $predmetTableHTML .= '<td><a href="' . $url . '" class="seup-badge seup-badge-primary seup-interactive" style="text-decoration: none;">' . $klasa . '</a></td>';
         $predmetTableHTML .= '<td>' . dol_trunc($predmet->naziv_predmeta, 40) . '</td>';
         $predmetTableHTML .= '<td>' . $predmet->name_ustanova . '</td>';
         $predmetTableHTML .= '<td>' . $predmet->ime_prezime . '</td>';
         $predmetTableHTML .= '<td>' . $predmet->datum_otvaranja . '</td>';
         $predmetTableHTML .= '<td>';
-        $predmetTableHTML .= '<div class="btn-group btn-group-sm">';
-        $predmetTableHTML .= '<a href="#" class="btn btn-outline-primary" title="' . $langs->trans('ViewDetails') . '">';
+        $predmetTableHTML .= '<div class="seup-flex seup-gap-2">';
+        $predmetTableHTML .= '<a href="' . $url . '" class="seup-btn seup-btn-sm seup-btn-ghost seup-tooltip" data-tooltip="' . $langs->trans('ViewDetails') . '">';
         $predmetTableHTML .= '<i class="fas fa-eye"></i>';
         $predmetTableHTML .= '</a>';
-        $predmetTableHTML .= '<a href="#" class="btn btn-outline-secondary" title="' . $langs->trans('Edit') . '">';
+        $predmetTableHTML .= '<a href="#" class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="' . $langs->trans('Edit') . '">';
         $predmetTableHTML .= '<i class="fas fa-edit"></i>';
         $predmetTableHTML .= '</a>';
-        $predmetTableHTML .= '<a href="#" class="btn btn-outline-danger" title="' . $langs->trans('CloseCase') . '">';
+        $predmetTableHTML .= '<a href="#" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="' . $langs->trans('CloseCase') . '">';
         $predmetTableHTML .= '<i class="fas fa-lock"></i>';
         $predmetTableHTML .= '</a>';
         $predmetTableHTML .= '</div>';
@@ -181,9 +181,14 @@ if (count($predmeti)) {
         $predmetTableHTML .= '</tr>';
     }
 } else {
-    $predmetTableHTML .= '<tr><td colspan="7" class="text-center text-muted py-4">';
-    $predmetTableHTML .= '<i class="fas fa-inbox fa-2x mb-2"></i><br>';
-    $predmetTableHTML .= $langs->trans('NoOpenCases');
+    $predmetTableHTML .= '<tr><td colspan="7">';
+    $predmetTableHTML .= '<div class="seup-empty-state">';
+    $predmetTableHTML .= '<div class="seup-empty-state-icon">';
+    $predmetTableHTML .= '<i class="fas fa-inbox"></i>';
+    $predmetTableHTML .= '</div>';
+    $predmetTableHTML .= '<h3 class="seup-empty-state-title">' . $langs->trans('NoOpenCases') . '</h3>';
+    $predmetTableHTML .= '<p class="seup-empty-state-description">Kreirajte novi predmet za početak rada</p>';
+    $predmetTableHTML .= '</div>';
     $predmetTableHTML .= '</td></tr>';
 }
 
@@ -209,21 +214,19 @@ print '<i class="fas fa-plus me-1"></i> ' . $langs->trans('NewCase');
 print '</button>';
 print '</div>';
 print $predmetTableHTML;
-print '<div class="mt-3 d-flex justify-content-between">';
-print '<div class="text-muted small">';
-print '<i class="fas fa-info-circle me-1"></i> ' . $langs->trans('ShowingCases', count($predmeti));
 print '</div>';
-print '<div>';
-print '<button type="button" class="btn btn-outline-secondary btn-sm">';
-print '<i class="fas fa-download me-1"></i> ' . $langs->trans('ExportExcel');
-print '</button>';
+print '<div class="seup-card-footer">';
+print '<div class="seup-flex seup-justify-between seup-items-center">';
+print '<div class="seup-text-small" style="color: var(--seup-gray-500);">';
+print '<i class="fas fa-info-circle"></i> ' . $langs->trans('ShowingCases', count($predmeti));
 print '</div>';
 print '</div>';
-print '</div>'; // p-3 border rounded
-print '</div>'; // container
+print '</div>';
+print '</div>'; // End card
+print '</div>'; // End container
 
-// Bootstrap JS
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
+// Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
 ?>
 <script>
     document.addEventListener("DOMContentLoaded", function() {

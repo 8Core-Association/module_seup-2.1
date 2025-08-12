@@ -208,28 +208,28 @@ if ($resql) {
     $trans_confirm = $langs->trans('ConfirmDeleteTag');
 
     if ($num > 0) {
-        print '<ul class="list-group">';
+        print '<div class="seup-flex" style="flex-wrap: wrap; gap: var(--seup-space-3); margin-top: var(--seup-space-4);">';
         while ($obj = $db->fetch_object($resql)) {
-            print '<li class="list-group-item d-flex justify-content-between align-items-center">';
-            print '<span class="badge bg-primary rounded-pill me-2">' . $obj->tag . '</span>';
+            print '<div class="seup-tag seup-tag-removable seup-interactive">';
+            print '<span>' . $obj->tag . '</span>';
 
             // Delete button with confirmation
             print '<form method="POST" action="" style="display:inline;">';
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
-            print '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'' . dol_escape_js($trans_confirm) . '\')">';
+            print '<button type="submit" class="seup-tag-remove" onclick="return confirm(\'' . dol_escape_js($trans_confirm) . '\')">';
             print '<i class="fas fa-trash"></i>';
             print '</button>';
             print '</form>';
 
-            print '</li>';
+            print '</div>';
         }
-        print '</ul>';
+        print '</div>';
     } else {
-        print '<div class="alert alert-info">' . $langs->trans('NoTagsAvailable') . '</div>';
+        print '<div class="seup-alert seup-alert-info" style="margin-top: var(--seup-space-4);">' . $langs->trans('NoTagsAvailable') . '</div>';
     }
 } else {
-    print '<div class="alert alert-warning">' . $langs->trans('ErrorLoadingTags') . '</div>';
+    print '<div class="seup-alert seup-alert-warning" style="margin-top: var(--seup-space-4);">' . $langs->trans('ErrorLoadingTags') . '</div>';
 }
 
 // Close HTML content
@@ -241,8 +241,8 @@ HTML;
 
 print $htmlFooter;
 
-// Bootstrap JS
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>';
+// Load modern JavaScript
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
 // End of page
 llxFooter();
