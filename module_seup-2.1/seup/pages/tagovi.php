@@ -170,6 +170,38 @@ if ($action == 'deletetag') {
     }
 }
 
+if ($action == 'deleteall') {
+    $db->begin();
+    
+    try {
+        // First delete all associations
+        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_predmet_tagovi 
+                WHERE fk_tag IN (
+                    SELECT rowid FROM " . MAIN_DB_PREFIX . "a_tagovi 
+                    WHERE entity = " . (int)$conf->entity . "
+                )";
+        $resql = $db->query($sql);
+        
+        if ($resql) {
+            // Then delete all tags
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_tagovi WHERE entity = " . (int)$conf->entity;
+            $resql = $db->query($sql);
+            
+            if ($resql) {
+                $db->commit();
+                setEventMessages('Sve oznake su uspješno obrisane', null, 'mesgs');
+            } else {
+                throw new Exception($db->lasterror());
+            }
+        } else {
+            throw new Exception($db->lasterror());
+        }
+    } catch (Exception $e) {
+        $db->rollback();
+        setEventMessages('Greška pri brisanju oznaka: ' . $e->getMessage(), null, 'errors');
+    }
+}
+
 // Get real statistics from database
 $totalTags = 0;
 $activeTags = 0;
@@ -227,14 +259,14 @@ print '<div class="seup-grid seup-grid-3 seup-mb-8">';
 
 // Total Tags Card
 print '<div class="seup-card seup-interactive">';
-print '<div class="seup-card-body">';
+print '<div class="seup-card-body" style="padding: var(--seup-space-3);">';
 print '<div class="seup-flex seup-items-center seup-gap-4">';
-print '<div class="seup-icon-lg" style="color: var(--seup-primary-600);">';
+print '<div class="seup-icon" style="color: var(--seup-primary-600);">';
 print '<i class="fas fa-tags"></i>';
 print '</div>';
 print '<div>';
-print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . $totalTags . '</h3>';
-print '<p class="seup-text-small">Ukupno Oznaka</p>';
+print '<h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">' . $totalTags . '</h3>';
+print '<p style="margin: 0; font-size: 0.75rem; color: var(--seup-gray-500);">Ukupno Oznaka</p>';
 print '</div>';
 print '</div>';
 print '</div>';
@@ -242,14 +274,14 @@ print '</div>';
 
 // Active Tags Card
 print '<div class="seup-card seup-interactive">';
-print '<div class="seup-card-body">';
+print '<div class="seup-card-body" style="padding: var(--seup-space-3);">';
 print '<div class="seup-flex seup-items-center seup-gap-4">';
-print '<div class="seup-icon-lg" style="color: var(--seup-success);">';
+print '<div class="seup-icon" style="color: var(--seup-success);">';
 print '<i class="fas fa-check-circle"></i>';
 print '</div>';
 print '<div>';
-print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">' . $activeTags . '</h3>';
-print '<p class="seup-text-small">Aktivne Oznake</p>';
+print '<h3 style="margin: 0; font-size: 1.5rem; font-weight: 600;">' . $activeTags . '</h3>';
+print '<p style="margin: 0; font-size: 0.75rem; color: var(--seup-gray-500);">Aktivne Oznake</p>';
 print '</div>';
 print '</div>';
 print '</div>';
@@ -257,14 +289,16 @@ print '</div>';
 
 // Quick Actions Card
 print '<div class="seup-card seup-interactive">';
-print '<div class="seup-card-body">';
-print '<div class="seup-flex seup-items-center seup-gap-4">';
-print '<div class="seup-icon-lg" style="color: var(--seup-accent);">';
-print '<i class="fas fa-plus"></i>';
-print '</div>';
-print '<div>';
-print '<h3 class="seup-heading-4" style="margin-bottom: var(--seup-space-1);">Brze Akcije</h3>';
-print '<p class="seup-text-small">Dodaj novu oznaku</p>';
+print '<div class="seup-card-body" style="padding: var(--seup-space-3);">';
+print '<div style="text-align: center;">';
+print '<h3 style="margin: 0 0 var(--seup-space-2) 0; font-size: 1rem; font-weight: 600;">Brze Akcije</h3>';
+print '<div class="seup-flex seup-gap-2" style="justify-content: center;">';
+print '<button class="seup-btn seup-btn-sm seup-btn-primary" onclick="scrollToForm()" style="font-size: 0.75rem;">';
+print '<i class="fas fa-plus"></i> Dodaj';
+print '</button>';
+print '<button class="seup-btn seup-btn-sm seup-btn-danger" onclick="deleteAllTags()" style="font-size: 0.75rem;">';
+print '<i class="fas fa-trash-alt"></i> Obriši sve';
+print '</button>';
 print '</div>';
 print '</div>';
 print '</div>';
@@ -876,6 +910,41 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dodajem...';
             submitBtn.disabled = true;
         });
+    }
+});
+
+// Quick actions functions
+function scrollToForm() {
+    document.getElementById('tagForm').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+    document.getElementById('tag').focus();
+}
+
+function deleteAllTags() {
+    if (confirm('Jeste li sigurni da želite obrisati SVE oznake? Ova akcija se ne može poništiti!')) {
+        if (confirm('PAŽNJA: Ovo će obrisati sve oznake i njihove veze s predmetima. Nastaviti?')) {
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '';
+            
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'deleteall';
+            
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = 'token';
+            tokenInput.value = '<?php echo newToken(); ?>';
+            
+            form.appendChild(actionInput);
+            form.appendChild(tokenInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
 });
 </script>
