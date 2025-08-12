@@ -273,6 +273,19 @@ print '</div>';
 print '<div class="seup-char-counter" id="charCounter">0/50</div>';
 print '</div>';
 
+print '<div class="seup-form-group">';
+print '<label class="seup-label">Boja Oznake</label>';
+print '<div class="seup-color-picker">';
+$colors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
+foreach ($colors as $color) {
+    print '<div class="seup-color-option seup-tag-' . $color . '" data-color="' . $color . '">';
+    print '<i class="fas fa-check" style="display: none;"></i>';
+    print '</div>';
+}
+print '</div>';
+print '<input type="hidden" name="tag_color" id="selectedColor" value="blue">';
+print '</div>';
+
 print '<div class="seup-help-text">';
 print '<i class="fas fa-info-circle"></i> ' . $langs->trans('TagoviHelpText');
 print '</div>';
@@ -327,14 +340,14 @@ if ($resql) {
             $creatorName = dolGetFirstLastname($obj->firstname, $obj->lastname);
             $usageCount = (int)$obj->usage_count;
             
-            print '<div class="seup-tag-card seup-interactive" data-tag="' . strtolower($obj->tag) . '">';
+            print '<div class="seup-tag-card-compact seup-interactive" data-tag="' . strtolower($obj->tag) . '">';
             
-            print '<div class="seup-tag-card-header">';
+            print '<div class="seup-tag-card-header-compact">';
             print '<div class="seup-tag seup-tag-primary">';
             print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
             print '</div>';
             print '<div class="seup-tag-actions">';
-            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi">';
+            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi" style="z-index: 1100;">';
             print '<i class="fas fa-edit"></i>';
             print '</button>';
             
@@ -343,7 +356,7 @@ if ($resql) {
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
             print '<input type="hidden" name="token" value="' . newToken() . '">';
-            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši">';
+            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši" style="z-index: 1100;">';
             print '<i class="fas fa-trash"></i>';
             print '</button>';
             print '</form>';
@@ -351,8 +364,8 @@ if ($resql) {
             print '</div>';
             print '</div>';
             
-            print '<div class="seup-tag-card-body">';
-            print '<div class="seup-tag-meta">';
+            print '<div class="seup-tag-card-body-compact">';
+            print '<div class="seup-tag-meta-compact">';
             print '<div class="seup-meta-item">';
             print '<i class="fas fa-calendar"></i>';
             print '<span>' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
@@ -361,19 +374,11 @@ if ($resql) {
             print '<i class="fas fa-user"></i>';
             print '<span>' . ($creatorName ?: 'Nepoznato') . '</span>';
             print '</div>';
-            print '<div class="seup-meta-item">';
-            print '<i class="fas fa-hashtag"></i>';
-            print '<span>ID: ' . $obj->rowid . '</span>';
-            print '</div>';
             print '</div>';
             
-            print '<div class="seup-tag-usage">';
+            print '<div class="seup-tag-usage-compact">';
             print '<div class="seup-usage-text">';
             print '<span>Koristi se u ' . $usageCount . ' predmeta</span>';
-            print '</div>';
-            print '<div class="seup-usage-bar">';
-            $percentage = $totalTags > 0 ? min(($usageCount / max($totalTags, 1)) * 100, 100) : 0;
-            print '<div class="seup-usage-fill" style="width: ' . $percentage . '%;"></div>';
             print '</div>';
             print '</div>';
             
@@ -414,6 +419,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const tagInput = document.getElementById('tag');
     const charCounter = document.getElementById('charCounter');
     const submitBtn = document.getElementById('submitBtn');
+    
+    // Color picker functionality
+    const colorOptions = document.querySelectorAll('.seup-color-option');
+    const selectedColorInput = document.getElementById('selectedColor');
+    
+    colorOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            colorOptions.forEach(opt => {
+                opt.classList.remove('active');
+                opt.querySelector('i').style.display = 'none';
+            });
+            
+            // Add active class to clicked option
+            this.classList.add('active');
+            this.querySelector('i').style.display = 'flex';
+            
+            // Update hidden input
+            selectedColorInput.value = this.getAttribute('data-color');
+        });
+    });
+    
+    // Set default color (blue)
+    if (colorOptions.length > 0) {
+        colorOptions[0].classList.add('active');
+        colorOptions[0].querySelector('i').style.display = 'flex';
+    }
     
     if (tagInput && charCounter) {
         function updateCharCounter() {

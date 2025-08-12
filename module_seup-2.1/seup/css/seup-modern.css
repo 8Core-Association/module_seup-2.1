@@ -1029,6 +1029,7 @@ body {
 .seup-tooltip {
   position: relative;
   display: inline-block;
+  z-index: 1100;
 }
 
 .seup-tooltip::after {
@@ -1047,6 +1048,7 @@ body {
   pointer-events: none;
   transition: var(--seup-transition);
   margin-bottom: var(--seup-space-2);
+  z-index: 1200;
 }
 
 .seup-tooltip:hover::after {
@@ -1615,6 +1617,132 @@ body {
   font-size: 0.75rem;
   color: var(--seup-gray-500);
   font-weight: 500;
+}
+
+/* Compact Tag Cards */
+.seup-tag-card-compact {
+  background: white;
+  border: 1px solid var(--seup-gray-200);
+  border-radius: var(--seup-radius);
+  padding: var(--seup-space-3);
+  transition: var(--seup-transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--seup-shadow-sm);
+  margin-bottom: var(--seup-space-3);
+}
+
+.seup-tag-card-compact:hover {
+  border-color: var(--seup-primary-300);
+  box-shadow: var(--seup-shadow-md);
+  transform: translateY(-2px);
+}
+
+.seup-tag-card-header-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--seup-space-2);
+}
+
+.seup-tag-card-body-compact {
+  font-size: 0.75rem;
+}
+
+.seup-tag-meta-compact {
+  display: flex;
+  gap: var(--seup-space-4);
+  margin-bottom: var(--seup-space-2);
+}
+
+.seup-tag-usage-compact {
+  margin-top: var(--seup-space-2);
+}
+
+/* Color Picker */
+.seup-color-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--seup-space-2);
+  margin-top: var(--seup-space-2);
+}
+
+.seup-color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--seup-radius);
+  cursor: pointer;
+  transition: var(--seup-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.seup-color-option:hover {
+  transform: scale(1.1);
+  box-shadow: var(--seup-shadow-md);
+}
+
+.seup-color-option.active {
+  border-color: var(--seup-gray-800);
+  transform: scale(1.1);
+  box-shadow: var(--seup-shadow-lg);
+}
+
+.seup-color-option i {
+  color: white;
+  font-size: 0.75rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: var(--seup-transition);
+}
+
+/* Enhanced Input Group */
+.seup-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.seup-input-enhanced {
+  padding-right: var(--seup-space-10);
+}
+
+.seup-input-icon {
+  position: absolute;
+  right: var(--seup-space-3);
+  color: var(--seup-gray-400);
+  pointer-events: none;
+  transition: var(--seup-transition);
+}
+
+.seup-input-enhanced:focus + .seup-input-icon {
+  color: var(--seup-primary-500);
+}
+
+.seup-char-counter {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--seup-gray-400);
+  margin-top: var(--seup-space-1);
+}
+
+.seup-help-text {
+  background: var(--seup-primary-50);
+  border: 1px solid var(--seup-primary-200);
+  border-radius: var(--seup-radius);
+  padding: var(--seup-space-3);
+  margin-top: var(--seup-space-4);
+  font-size: 0.875rem;
+  color: var(--seup-primary-700);
+}
+
+.seup-form-actions {
+  display: flex;
+  gap: var(--seup-space-3);
+  margin-top: var(--seup-space-6);
 }
 
 .seup-tag-count {
