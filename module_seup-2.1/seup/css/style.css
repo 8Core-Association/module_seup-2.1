@@ -45,7 +45,7 @@
 
 .autocomplete-dropdown {
   position: absolute;
-  z-index: 99999;
+  z-index: 999999;
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
@@ -175,6 +175,24 @@
     border-color: var(--seup-primary-500, #3b82f6) !important;
     box-shadow: 0 0 0 3px var(--seup-primary-100, #dbeafe) !important;
     outline: 0;
+}
+
+/* Universal dropdown z-index fix */
+.dropdown-menu,
+.select2-dropdown,
+.ui-autocomplete,
+[class*="dropdown"],
+[id*="dropdown"] {
+  z-index: 999999 !important;
+}
+
+/* Specific fixes for tags/oznake dropdowns */
+[class*="tag"][class*="dropdown"],
+[id*="tag"][class*="dropdown"],
+[class*="oznake"][class*="dropdown"],
+[id*="oznake"][class*="dropdown"] {
+  z-index: 999999 !important;
+  position: relative !important;
 }
 
 /* Enhanced animations */
