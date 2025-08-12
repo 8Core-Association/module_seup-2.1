@@ -756,18 +756,65 @@ body {
 }
 
 /* Tag color variants */
-.seup-tag-blue { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
-.seup-tag-purple { background: #f3e8ff; color: #7c3aed; border-color: #8b5cf6; }
-.seup-tag-green { background: #dcfce7; color: #16a34a; border-color: #22c55e; }
-.seup-tag-orange { background: #fed7aa; color: #ea580c; border-color: #f97316; }
-.seup-tag-pink { background: #fce7f3; color: #db2777; border-color: #ec4899; }
-.seup-tag-teal { background: #ccfbf1; color: #0d9488; border-color: #14b8a6; }
-.seup-tag-amber { background: #fef3c7; color: #d97706; border-color: #f59e0b; }
-.seup-tag-indigo { background: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
-.seup-tag-red { background: #fecaca; color: #dc2626; border-color: #ef4444; }
-.seup-tag-emerald { background: #d1fae5; color: #059669; border-color: #10b981; }
-.seup-tag-sky { background: #e0f2fe; color: #0284c7; border-color: #0ea5e9; }
-.seup-tag-yellow { background: #fef7cd; color: #ca8a04; border-color: #eab308; }
+.seup-tag-blue { 
+  background: #dbeafe !important; 
+  color: #1e40af !important; 
+  border-color: #3b82f6 !important; 
+}
+.seup-tag-purple { 
+  background: #f3e8ff !important; 
+  color: #7c3aed !important; 
+  border-color: #8b5cf6 !important; 
+}
+.seup-tag-green { 
+  background: #dcfce7 !important; 
+  color: #16a34a !important; 
+  border-color: #22c55e !important; 
+}
+.seup-tag-orange { 
+  background: #fed7aa !important; 
+  color: #ea580c !important; 
+  border-color: #f97316 !important; 
+}
+.seup-tag-pink { 
+  background: #fce7f3 !important; 
+  color: #db2777 !important; 
+  border-color: #ec4899 !important; 
+}
+.seup-tag-teal { 
+  background: #ccfbf1 !important; 
+  color: #0d9488 !important; 
+  border-color: #14b8a6 !important; 
+}
+.seup-tag-amber { 
+  background: #fef3c7 !important; 
+  color: #d97706 !important; 
+  border-color: #f59e0b !important; 
+}
+.seup-tag-indigo { 
+  background: #e0e7ff !important; 
+  color: #4f46e5 !important; 
+  border-color: #6366f1 !important; 
+}
+.seup-tag-red { 
+  background: #fecaca !important; 
+  color: #dc2626 !important; 
+  border-color: #ef4444 !important; 
+}
+.seup-tag-emerald { 
+  background: #d1fae5 !important; 
+  color: #059669 !important; 
+  border-color: #10b981 !important; 
+}
+.seup-tag-sky { 
+  background: #e0f2fe !important; 
+  color: #0284c7 !important; 
+  border-color: #0ea5e9 !important; 
+}
+.seup-tag-yellow { 
+  background: #fef7cd !important; 
+  color: #ca8a04 !important; 
+  border-color: #eab308 !important; 
 }
 
 /* Loading States */
@@ -1131,10 +1178,34 @@ body {
   color: white;
 }
 
-.seup-calendar-title {
+.seup-calendar-title-container {
+  display: flex;
+  align-items: center;
+  gap: var(--seup-space-2);
+}
+
+.seup-calendar-month-select,
+.seup-calendar-year-select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: var(--seup-space-1) var(--seup-space-2);
+  border-radius: var(--seup-radius-sm);
   font-weight: 600;
   font-size: 0.875rem;
-  user-select: none;
+  cursor: pointer;
+  transition: var(--seup-transition);
+}
+
+.seup-calendar-month-select:hover,
+.seup-calendar-year-select:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.seup-calendar-month-select option,
+.seup-calendar-year-select option {
+  background: var(--seup-primary-600);
+  color: white;
 }
 
 .seup-calendar-nav {
@@ -1265,17 +1336,34 @@ body {
 
 /* Enhanced Tag Styles */
 .tag-option {
+  background: white !important;
+  border: 1px solid var(--seup-gray-300) !important;
+  color: var(--seup-gray-700) !important;
+  padding: var(--seup-space-2) var(--seup-space-3) !important;
+  border-radius: var(--seup-radius) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
   transition: var(--seup-transition) !important;
+  cursor: pointer !important;
   position: relative;
   overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--seup-space-1);
 }
 
 .tag-option:hover {
+  background: var(--seup-primary-50) !important;
+  border-color: var(--seup-primary-300) !important;
+  color: var(--seup-primary-700) !important;
   transform: translateY(-1px);
   box-shadow: var(--seup-shadow-md);
 }
 
 .tag-option.active {
+  background: var(--seup-primary-600) !important;
+  border-color: var(--seup-primary-600) !important;
+  color: white !important;
   transform: translateY(-1px);
   box-shadow: var(--seup-shadow-md);
 }

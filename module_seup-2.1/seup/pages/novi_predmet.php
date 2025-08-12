@@ -410,8 +410,12 @@ $db->close();
       
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
+      
+      // Calculate start date (Monday of the week containing first day)
       const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+      const dayOfWeek = firstDay.getDay();
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0, Sunday = 6
+      startDate.setDate(firstDay.getDate() - daysToSubtract);
       
       const monthNames = [
         'Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj',
@@ -425,7 +429,16 @@ $db->close();
           <button type="button" class="seup-calendar-nav" data-action="prev-month">
             <i class="fas fa-chevron-left"></i>
           </button>
-          <span class="seup-calendar-title">${monthNames[month]} ${year}</span>
+          <div class="seup-calendar-title-container">
+            <select class="seup-calendar-month-select" data-action="change-month">
+              ${monthNames.map((name, index) => 
+                `<option value="${index}" ${index === month ? 'selected' : ''}>${name}</option>`
+              ).join('')}
+            </select>
+            <select class="seup-calendar-year-select" data-action="change-year">
+              ${this.generateYearOptions(year)}
+            </select>
+          </div>
           <button type="button" class="seup-calendar-nav" data-action="next-month">
             <i class="fas fa-chevron-right"></i>
           </button>
@@ -437,14 +450,18 @@ $db->close();
           <div class="seup-calendar-days">
       `;
       
-      for (let i = 0; i < 42; i++) {
+      // Calculate how many weeks we need (minimum 6 weeks to show full month)
+      const totalDays = 42;
+      
+      for (let i = 0; i < totalDays; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         
         const isCurrentMonth = date.getMonth() === month;
         const isToday = date.toDateString() === now.toDateString();
         const isSelected = this.selectedDate && this.selectedDate === this.formatDate(date);
-        const isPast = date < today.setHours(0,0,0,0) && !isToday;
+        const isPast = date < new Date().setHours(0,0,0,0) && !isToday;
+        
         let dayClass = `seup-calendar-day`;
         if (!isCurrentMonth) dayClass += ' other-month';
         if (isToday) dayClass += ' today';
@@ -466,6 +483,19 @@ $db->close();
       
       this.calendar.innerHTML = html;
       this.attachCalendarEvents();
+    }
+    
+    generateYearOptions(currentYear) {
+      const startYear = currentYear - 10;
+      const endYear = currentYear + 10;
+      let options = '';
+      
+      for (let year = startYear; year <= endYear; year++) {
+        const selected = year === currentYear ? 'selected' : '';
+        options += `<option value="${year}" ${selected}>${year}</option>`;
+      }
+      
+      return options;
     }
     
     formatDate(date) {
@@ -506,6 +536,16 @@ $db->close();
             this.currentMonth = 0;
             this.currentYear++;
           }
+          this.renderCalendar();
+        }
+        
+        if (e.target.closest('[data-action="change-month"]')) {
+          this.currentMonth = parseInt(e.target.value);
+          this.renderCalendar();
+        }
+        
+        if (e.target.closest('[data-action="change-year"]')) {
+          this.currentYear = parseInt(e.target.value);
           this.renderCalendar();
         }
       });
