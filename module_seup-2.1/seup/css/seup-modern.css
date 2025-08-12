@@ -642,6 +642,7 @@ body {
 /* Dropdown Enhancements */
 .seup-dropdown {
   position: relative;
+  z-index: 1000;
 }
 
 .seup-dropdown-menu {
@@ -653,7 +654,7 @@ body {
   border: 1px solid var(--seup-gray-200);
   border-radius: var(--seup-radius);
   box-shadow: var(--seup-shadow-lg);
-  z-index: 1000;
+  z-index: 9999;
   max-height: 200px;
   overflow-y: auto;
   margin-top: var(--seup-space-1);
@@ -726,6 +727,12 @@ body {
   gap: var(--seup-space-2);
   max-height: 200px;
   overflow-y: auto;
+  position: relative;
+  z-index: 10000;
+  background: white;
+  border: 1px solid var(--seup-gray-200);
+  border-radius: var(--seup-radius);
+  box-shadow: var(--seup-shadow-lg);
 }
 
 /* Selected tags container */
