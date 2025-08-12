@@ -298,11 +298,25 @@ print '</div>';
 
 print '<div class="seup-form-group">';
 print '<label class="seup-label">Boja Oznake</label>';
-print '<div class="seup-color-picker">';
-$colors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
-foreach ($colors as $color) {
-    print '<div class="seup-color-option seup-tag-' . $color . '" data-color="' . $color . '">';
-    print '<i class="fas fa-check" style="display: none;"></i>';
+print '<div class="color-picker-grid">';
+$colors = [
+    'blue' => '#3b82f6',
+    'purple' => '#8b5cf6', 
+    'green' => '#10b981',
+    'orange' => '#f97316',
+    'pink' => '#ec4899',
+    'teal' => '#14b8a6',
+    'amber' => '#f59e0b',
+    'indigo' => '#6366f1',
+    'red' => '#ef4444',
+    'emerald' => '#059669',
+    'sky' => '#0ea5e9',
+    'yellow' => '#eab308'
+];
+
+foreach ($colors as $colorName => $colorHex) {
+    print '<div class="color-option" data-color="' . $colorName . '" style="background-color: ' . $colorHex . ';">';
+    print '<i class="fas fa-check"></i>';
     print '</div>';
 }
 print '</div>';
@@ -342,32 +356,31 @@ print '<i class="fas fa-search seup-input-icon"></i>';
 print '</div>';
 print '</div>';
 
-// Color Filter
+// Color Filter with Checkboxes
 print '<div class="seup-form-group">';
 print '<label class="seup-label">Filter po boji</label>';
-print '<div class="seup-color-filter-checkboxes">';
-print '<div class="seup-checkbox-group">';
-print '<label class="seup-checkbox-label">';
-print '<input type="checkbox" class="seup-checkbox" data-color="all" checked>';
-print '<span class="seup-checkbox-custom">';
-print '<span class="seup-color-dot" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);"></span>';
+print '<div class="color-filter-checkboxes">';
+
+// All colors checkbox
+print '<label class="color-filter-checkbox">';
+print '<input type="checkbox" data-color="all" checked>';
+print '<span class="checkbox-custom">';
+print '<span class="color-dot" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6, #10b981);"></span>';
 print '</span>';
 print '<span>Sve boje</span>';
 print '</label>';
-print '</div>';
 
-$colors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
-foreach ($colors as $color) {
-    print '<div class="seup-checkbox-group">';
-    print '<label class="seup-checkbox-label">';
-    print '<input type="checkbox" class="seup-checkbox" data-color="' . $color . '" checked>';
-    print '<span class="seup-checkbox-custom">';
-    print '<span class="seup-color-dot seup-tag-' . $color . '"></span>';
+// Individual color checkboxes
+foreach ($colors as $colorName => $colorHex) {
+    print '<label class="color-filter-checkbox">';
+    print '<input type="checkbox" data-color="' . $colorName . '" checked>';
+    print '<span class="checkbox-custom">';
+    print '<span class="color-dot" style="background-color: ' . $colorHex . ';"></span>';
     print '</span>';
-    print '<span>' . ucfirst($color) . '</span>';
+    print '<span>' . ucfirst($colorName) . '</span>';
     print '</label>';
-    print '</div>';
 }
+
 print '</div>';
 print '</div>';
 
@@ -386,21 +399,28 @@ if ($resql) {
     $num = $db->num_rows($resql);
     
     if ($num > 0) {
-        print '<div class="seup-tags-grid" id="tagsContainer">';
+        print '<div class="tags-list" id="tagsContainer">';
         
         while ($obj = $db->fetch_object($resql)) {
             $creatorName = dolGetFirstLastname($obj->firstname, $obj->lastname);
             $usageCount = (int)$obj->usage_count;
             $tagColor = $obj->tag_color ?: 'blue';
+            $colorHex = $colors[$tagColor] ?? '#3b82f6';
             
-            print '<div class="seup-tag-card-compact seup-interactive" data-tag="' . strtolower($obj->tag) . '" data-color="' . $tagColor . '">';
+            print '<div class="tag-item" data-tag="' . strtolower($obj->tag) . '" data-color="' . $tagColor . '">';
             
-            print '<div class="seup-tag-card-header-compact">';
-            print '<div class="seup-tag seup-tag-' . $tagColor . '" style="background: var(--seup-' . $tagColor . '-100); color: var(--seup-' . $tagColor . '-700); border-color: var(--seup-' . $tagColor . '-300);">';
+            print '<div class="tag-display" style="background-color: ' . $colorHex . '20; border-color: ' . $colorHex . '40; color: ' . $colorHex . ';">';
             print '<i class="fas fa-tag"></i> ' . dol_escape_htmltag($obj->tag);
             print '</div>';
-            print '<div class="seup-tag-actions">';
-            print '<button class="seup-btn seup-btn-sm seup-btn-secondary seup-tooltip" data-tooltip="Uredi" style="z-index: 1100 !important;">';
+            
+            print '<div class="tag-meta">';
+            print '<span><i class="fas fa-calendar"></i> ' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
+            print '<span><i class="fas fa-user"></i> ' . ($creatorName ?: 'Nepoznato') . '</span>';
+            print '<span><i class="fas fa-chart-bar"></i> ' . $usageCount . ' predmeta</span>';
+            print '</div>';
+            
+            print '<div class="tag-actions">';
+            print '<button class="action-btn edit-btn" data-tooltip="Uredi">';
             print '<i class="fas fa-edit"></i>';
             print '</button>';
             
@@ -409,37 +429,16 @@ if ($resql) {
             print '<input type="hidden" name="action" value="deletetag">';
             print '<input type="hidden" name="tagid" value="' . $obj->rowid . '">';
             print '<input type="hidden" name="token" value="' . newToken() . '">';
-            print '<button type="submit" class="seup-btn seup-btn-sm seup-btn-danger seup-tooltip" data-tooltip="Obriši" style="z-index: 1100 !important;">';
+            print '<button type="submit" class="action-btn delete-btn" data-tooltip="Obriši">';
             print '<i class="fas fa-trash"></i>';
             print '</button>';
             print '</form>';
             
             print '</div>';
-            print '</div>';
-            
-            print '<div class="seup-tag-card-body-compact">';
-            print '<div class="seup-tag-meta-compact">';
-            print '<div class="seup-meta-item">';
-            print '<i class="fas fa-calendar"></i>';
-            print '<span>' . dol_print_date($db->jdate($obj->date_creation), 'day') . '</span>';
-            print '</div>';
-            print '<div class="seup-meta-item">';
-            print '<i class="fas fa-user"></i>';
-            print '<span>' . ($creatorName ?: 'Nepoznato') . '</span>';
-            print '</div>';
-            print '</div>';
-            
-            print '<div class="seup-tag-usage-compact">';
-            print '<div class="seup-usage-text">';
-            print '<span>Koristi se u ' . $usageCount . ' predmeta</span>';
-            print '</div>';
-            print '</div>';
-            
-            print '</div>'; // End card body
-            print '</div>'; // End card
+            print '</div>'; // End tag item
         }
         
-        print '</div>'; // End tags grid
+        print '</div>'; // End tags list
     } else {
         print '<div class="seup-empty-state">';
         print '<div class="seup-empty-state-icon">';
@@ -466,6 +465,286 @@ print '<script src="/custom/seup/js/seup-modern.js"></script>';
 
 ?>
 
+<style>
+/* Color picker styles */
+.color-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.color-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.color-option.active {
+    border-color: #1f2937;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.color-option i {
+    color: white;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+.color-option.active i {
+    display: block;
+}
+
+/* Color filter checkboxes */
+.color-filter-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.color-filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.color-filter-checkbox:hover {
+    background-color: #f8fafc;
+}
+
+.color-filter-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.color-filter-checkbox input:checked + .checkbox-custom {
+    border-color: #2563eb;
+    background-color: #2563eb;
+}
+
+.color-filter-checkbox input:checked + .checkbox-custom::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Tags list styles */
+.tags-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.tag-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tag-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.tag-display {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.tag-meta {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.tag-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tag-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.tag-item:hover .tag-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: none;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    position: relative;
+    z-index: 1000;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+.edit-btn:hover {
+    background: #f0f9ff;
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+.delete-btn:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #dc2626;
+}
+
+/* Tooltip */
+.action-btn[data-tooltip] {
+    position: relative;
+}
+
+.action-btn[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 2000;
+    margin-bottom: 4px;
+}
+
+/* Character counter */
+.seup-char-counter {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* Input group */
+.seup-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.seup-input-enhanced {
+    padding-right: 40px;
+}
+
+.seup-input-icon {
+    position: absolute;
+    right: 12px;
+    color: #94a3b8;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.seup-input-enhanced:focus + .seup-input-icon {
+    color: #2563eb;
+}
+
+/* Help text */
+.seup-help-text {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: #1d4ed8;
+}
+
+/* Form actions */
+.seup-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Disabled button */
+.seup-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.seup-btn.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Character counter
@@ -474,7 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     
     // Color picker functionality
-    const colorOptions = document.querySelectorAll('.seup-color-option');
+    const colorOptions = document.querySelectorAll('.color-option');
     const selectedColorInput = document.getElementById('selectedColor');
     
     colorOptions.forEach(option => {
@@ -487,7 +766,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add active class to clicked option
             this.classList.add('active');
-            this.querySelector('i').style.display = 'flex';
+            this.querySelector('i').style.display = 'block';
             
             // Update hidden input
             selectedColorInput.value = this.getAttribute('data-color');
@@ -497,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set default color (blue)
     if (colorOptions.length > 0) {
         colorOptions[0].classList.add('active');
-        colorOptions[0].querySelector('i').style.display = 'flex';
+        colorOptions[0].querySelector('i').style.display = 'block';
     }
     
     if (tagInput && charCounter) {
@@ -507,15 +786,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Change color based on length
             if (length < 2) {
-                charCounter.style.color = 'var(--seup-error)';
+                charCounter.style.color = '#ef4444';
                 submitBtn.disabled = true;
                 submitBtn.classList.add('disabled');
             } else if (length > 45) {
-                charCounter.style.color = 'var(--seup-warning)';
+                charCounter.style.color = '#f59e0b';
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('disabled');
             } else {
-                charCounter.style.color = 'var(--seup-success)';
+                charCounter.style.color = '#10b981';
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('disabled');
             }
@@ -527,40 +806,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Search functionality
     const searchInput = document.getElementById('searchTags');
-    const tagCards = document.querySelectorAll('.seup-tag-card-compact');
-    const colorFilterBtns = document.querySelectorAll('.seup-color-filter-btn');
+    const tagItems = document.querySelectorAll('.tag-item');
+    const colorCheckboxes = document.querySelectorAll('input[type="checkbox"][data-color]');
     
-    let currentColorFilter = 'all';
-    
-    function filterTags() {
-        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-        
-        tagCards.forEach(card => {
-            const tagName = card.getAttribute('data-tag');
-            const tagColor = card.getAttribute('data-color');
-            
-            const matchesSearch = !searchTerm || tagName.includes(searchTerm);
-            const matchesColor = currentColorFilter === 'all' || tagColor === currentColorFilter;
-            
-            if (matchesSearch && matchesColor) {
-                card.style.display = 'block';
-                card.classList.add('seup-fade-in');
-            } else {
-                card.style.display = 'none';
-                card.classList.remove('seup-fade-in');
-            }
-        });
-    }
-    
-    // Search functionality
-    if (searchInput) {
-        searchInput.addEventListener('input', filterTags);
-    }
-    
-    // Color filter functionality
-    const colorCheckboxes = document.querySelectorAll('.seup-checkbox[data-color]');
     let activeColors = new Set(['all', 'blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow']);
     
+    // Color filter functionality
     colorCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const color = this.getAttribute('data-color');
@@ -581,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     activeColors.delete(color);
                     // Uncheck "all" if any individual color is unchecked
-                    const allCheckbox = document.querySelector('.seup-checkbox[data-color="all"]');
+                    const allCheckbox = document.querySelector('input[data-color="all"]');
                     if (allCheckbox) allCheckbox.checked = false;
                     activeColors.delete('all');
                 }
@@ -590,7 +841,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const individualColors = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'amber', 'indigo', 'red', 'emerald', 'sky', 'yellow'];
                 const allIndividualChecked = individualColors.every(c => activeColors.has(c));
                 if (allIndividualChecked) {
-                    const allCheckbox = document.querySelector('.seup-checkbox[data-color="all"]');
+                    const allCheckbox = document.querySelector('input[data-color="all"]');
                     if (allCheckbox) allCheckbox.checked = true;
                     activeColors.add('all');
                 }
@@ -603,21 +854,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterTags() {
         const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
         
-        tagCards.forEach(card => {
-            const tagName = card.getAttribute('data-tag');
-            const tagColor = card.getAttribute('data-color');
+        tagItems.forEach(item => {
+            const tagName = item.getAttribute('data-tag');
+            const tagColor = item.getAttribute('data-color');
             
             const matchesSearch = !searchTerm || tagName.includes(searchTerm);
             const matchesColor = activeColors.has('all') || activeColors.has(tagColor);
             
             if (matchesSearch && matchesColor) {
-                card.style.display = 'block';
-                card.classList.add('seup-fade-in');
+                item.style.display = 'flex';
             } else {
-                card.style.display = 'none';
-                card.classList.remove('seup-fade-in');
+                item.style.display = 'none';
             }
         });
+    }
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', filterTags);
     }
     
     // Form submission with loading state
@@ -628,36 +882,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = true;
         });
     }
-    
-    // Enhanced hover effects for tag cards
-    tagCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px)';
-            this.style.boxShadow = 'var(--seup-shadow-lg)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = 'var(--seup-shadow)';
-        });
-    });
-    
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Ctrl/Cmd + N for new tag
-        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-            e.preventDefault();
-            tagInput.focus();
-        }
-        
-        // Escape to clear search
-        if (e.key === 'Escape') {
-            if (searchInput) {
-                searchInput.value = '';
-                searchInput.dispatchEvent(new Event('input'));
-            }
-        }
-    });
 });
 </script>
 
