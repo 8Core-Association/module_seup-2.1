@@ -175,17 +175,19 @@ print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-
 print '<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />';
 print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-// Create modern date inputs with custom date picker
-$strankaDateHTML = '<div class="seup-date-picker">
+// Create modern date inputs with popup date picker
+$strankaDateHTML = '<div class="seup-date-input-wrapper">
     <input type="text" class="seup-input seup-date-input" name="strankaDatumOtvaranja" placeholder="dd.mm.yyyy" readonly>
-    <i class="fas fa-calendar-alt seup-date-icon"></i>
-    <div class="seup-calendar" style="display: none;"></div>
+    <button type="button" class="seup-date-trigger" data-target="strankaDatumOtvaranja">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
 </div>';
 
-$datumOtvaranjaHTML = '<div class="seup-date-picker">
+$datumOtvaranjaHTML = '<div class="seup-date-input-wrapper">
     <input type="text" class="seup-input seup-date-input" name="datumOtvaranja" placeholder="dd.mm.yyyy" readonly>
-    <i class="fas fa-calendar-alt seup-date-icon"></i>
-    <div class="seup-calendar" style="display: none;"></div>
+    <button type="button" class="seup-date-trigger" data-target="datumOtvaranja">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
 </div>';
 
 // Page Header
@@ -335,6 +337,27 @@ print $htmlContent;
 
 // Ne diraj dalje ispod ništa ne mjenjaj dole je samo bootstrap cdn java scripta i dolibarr footer postavke kao što vidiš//
 
+// Date Picker Modal
+print '<div id="datePickerModal" class="seup-modal" style="display: none;">';
+print '<div class="seup-modal-overlay"></div>';
+print '<div class="seup-modal-content">';
+print '<div class="seup-modal-header">';
+print '<h3 class="seup-modal-title">Odaberite datum</h3>';
+print '<button type="button" class="seup-modal-close" id="closeDatePicker">';
+print '<i class="fas fa-times"></i>';
+print '</button>';
+print '</div>';
+print '<div class="seup-modal-body">';
+print '<div id="calendarContainer"></div>';
+print '</div>';
+print '<div class="seup-modal-footer">';
+print '<button type="button" class="seup-btn seup-btn-secondary" id="todayBtn">Danas</button>';
+print '<button type="button" class="seup-btn seup-btn-secondary" id="clearDateBtn">Očisti</button>';
+print '<button type="button" class="seup-btn seup-btn-primary" id="confirmDateBtn">Potvrdi</button>';
+print '</div>';
+print '</div>';
+print '</div>';
+
 // Load required JavaScript libraries
 print '<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>';
 print '<script src="/custom/seup/js/seup-modern.js"></script>';
@@ -357,89 +380,120 @@ $db->close();
   // Global variable for current date
   const now = new Date();
 
-  // Enhanced Date Picker Implementation
-  class SEUPDatePicker {
-    constructor(container) {
-      this.container = container;
-      this.input = container.querySelector('.seup-date-input');
-      this.calendar = container.querySelector('.seup-calendar');
-      this.icon = container.querySelector('.seup-date-icon');
+  // Popup Date Picker Implementation
+  class SEUPPopupDatePicker {
+    constructor() {
+      this.modal = document.getElementById('datePickerModal');
+      this.calendarContainer = document.getElementById('calendarContainer');
+      this.currentInput = null;
       this.selectedDate = null;
       this.currentMonth = new Date().getMonth();
       this.currentYear = new Date().getFullYear();
+      this.today = new Date();
+      
+      this.monthNames = [
+        'Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj',
+        'Srpanj', 'Kolovoz', 'Rujan', 'Listopad', 'Studeni', 'Prosinac'
+      ];
       
       this.init();
     }
     
     init() {
-      this.input.addEventListener('click', () => this.show());
-      this.icon.addEventListener('click', () => this.show());
-      
-      document.addEventListener('click', (e) => {
-        if (!this.container.contains(e.target)) {
-          this.hide();
-        }
+      // Attach events to date triggers
+      document.querySelectorAll('.seup-date-trigger').forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetName = trigger.getAttribute('data-target');
+          this.currentInput = document.querySelector(`input[name="${targetName}"]`);
+          this.show();
+        });
       });
       
-      // Keyboard navigation
-      this.input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          this.show();
-        }
-        if (e.key === 'Escape') {
-          this.hide();
+      // Modal close events
+      document.getElementById('closeDatePicker').addEventListener('click', () => this.hide());
+      document.querySelector('.seup-modal-overlay').addEventListener('click', () => this.hide());
+      
+      // Footer buttons
+      document.getElementById('todayBtn').addEventListener('click', () => this.selectToday());
+      document.getElementById('clearDateBtn').addEventListener('click', () => this.clearDate());
+      document.getElementById('confirmDateBtn').addEventListener('click', () => this.confirmSelection());
+      
+      // Keyboard events
+      document.addEventListener('keydown', (e) => {
+        if (this.modal.style.display === 'flex') {
+          if (e.key === 'Escape') {
+            this.hide();
+          }
         }
       });
     }
     
     show() {
-      this.calendar.style.display = 'block';
-      this.calendar.classList.add('seup-fade-in');
+      // Set current date if input has value
+      if (this.currentInput && this.currentInput.value) {
+        const parts = this.currentInput.value.split('.');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]) - 1;
+          const year = parseInt(parts[2]);
+          this.selectedDate = new Date(year, month, day);
+          this.currentMonth = month;
+          this.currentYear = year;
+        }
+      } else {
+        this.selectedDate = null;
+        this.currentMonth = this.today.getMonth();
+        this.currentYear = this.today.getFullYear();
+      }
+      
+      this.modal.style.display = 'flex';
       this.renderCalendar();
+      
+      // Focus trap
+      setTimeout(() => {
+        this.modal.querySelector('.seup-modal-content').focus();
+      }, 100);
     }
     
     hide() {
-      this.calendar.style.display = 'none';
-      this.calendar.classList.remove('seup-fade-in');
+      this.modal.style.display = 'none';
+      this.currentInput = null;
     }
     
     renderCalendar() {
       const year = this.currentYear;
       const month = this.currentMonth;
       
+      // Calculate first day of month and how many days
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
       
-      // Calculate start date (Monday of the week containing first day)
-      const startDate = new Date(firstDay);
-      const dayOfWeek = firstDay.getDay();
-      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0, Sunday = 6
-      startDate.setDate(firstDay.getDate() - daysToSubtract);
+      // Calculate starting day (Monday = 1, Sunday = 0)
+      let startingDayOfWeek = firstDay.getDay();
+      if (startingDayOfWeek === 0) startingDayOfWeek = 7; // Convert Sunday to 7
       
-      const monthNames = [
-        'Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj',
-        'Srpanj', 'Kolovoz', 'Rujan', 'Listopad', 'Studeni', 'Prosinac'
-      ];
-      
-      const today = new Date();
+      // Calculate previous month days to show
+      const prevMonth = new Date(year, month - 1, 0);
+      const daysInPrevMonth = prevMonth.getDate();
       
       let html = `
         <div class="seup-calendar-header">
-          <button type="button" class="seup-calendar-nav" data-action="prev-month">
+          <button type="button" class="seup-calendar-nav" id="prevMonth">
             <i class="fas fa-chevron-left"></i>
           </button>
-          <div class="seup-calendar-title-container">
-            <select class="seup-calendar-month-select" data-action="change-month">
-              ${monthNames.map((name, index) => 
+          <div class="seup-calendar-title">
+            <select class="seup-calendar-select" id="monthSelect">
+              ${this.monthNames.map((name, index) => 
                 `<option value="${index}" ${index === month ? 'selected' : ''}>${name}</option>`
               ).join('')}
             </select>
-            <select class="seup-calendar-year-select" data-action="change-year">
+            <select class="seup-calendar-select" id="yearSelect">
               ${this.generateYearOptions(year)}
             </select>
           </div>
-          <button type="button" class="seup-calendar-nav" data-action="next-month">
+          <button type="button" class="seup-calendar-nav" id="nextMonth">
             <i class="fas fa-chevron-right"></i>
           </button>
         </div>
@@ -450,43 +504,45 @@ $db->close();
           <div class="seup-calendar-days">
       `;
       
-      // Calculate how many weeks we need (minimum 6 weeks to show full month)
-      const totalDays = 42;
+      // Add previous month days
+      for (let i = startingDayOfWeek - 1; i > 0; i--) {
+        const day = daysInPrevMonth - i + 1;
+        html += `<button type="button" class="seup-calendar-day other-month" disabled>${day}</button>`;
+      }
       
-      for (let i = 0; i < totalDays; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
+      // Add current month days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const isToday = this.isSameDay(date, this.today);
+        const isSelected = this.selectedDate && this.isSameDay(date, this.selectedDate);
         
-        const isCurrentMonth = date.getMonth() === month;
-        const isToday = date.toDateString() === now.toDateString();
-        const isSelected = this.selectedDate && this.selectedDate === this.formatDate(date);
-        const isPast = date < new Date().setHours(0,0,0,0) && !isToday;
-        
-        let dayClass = `seup-calendar-day`;
-        if (!isCurrentMonth) dayClass += ' other-month';
+        let dayClass = 'seup-calendar-day';
         if (isToday) dayClass += ' today';
         if (isSelected) dayClass += ' selected';
-        if (isPast) dayClass += ' past';
         
         const formattedDate = this.formatDate(date);
-        html += `<button type="button" class="${dayClass}" data-date="${formattedDate}" ${!isCurrentMonth ? 'disabled' : ''}>${date.getDate()}</button>`;
+        html += `<button type="button" class="${dayClass}" data-date="${formattedDate}">${day}</button>`;
+      }
+      
+      // Add next month days to fill the grid
+      const totalCells = Math.ceil((startingDayOfWeek - 1 + daysInMonth) / 7) * 7;
+      const remainingCells = totalCells - (startingDayOfWeek - 1 + daysInMonth);
+      
+      for (let day = 1; day <= remainingCells; day++) {
+        html += `<button type="button" class="seup-calendar-day other-month" disabled>${day}</button>`;
       }
       
       html += `
           </div>
         </div>
-        <div class="seup-calendar-footer">
-          <button type="button" class="seup-btn seup-btn-sm seup-btn-secondary" data-action="today">Danas</button>
-          <button type="button" class="seup-btn seup-btn-sm seup-btn-secondary" data-action="clear">Očisti</button>
-        </div>
       `;
       
-      this.calendar.innerHTML = html;
+      this.calendarContainer.innerHTML = html;
       this.attachCalendarEvents();
     }
     
     generateYearOptions(currentYear) {
-      const startYear = currentYear - 10;
+      const startYear = currentYear - 20;
       const endYear = currentYear + 10;
       let options = '';
       
@@ -498,80 +554,102 @@ $db->close();
       return options;
     }
     
-    formatDate(date) {
-      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-    }
-    
     attachCalendarEvents() {
-      this.calendar.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
+      // Navigation buttons
+      document.getElementById('prevMonth').addEventListener('click', () => {
+        this.currentMonth--;
+        if (this.currentMonth < 0) {
+          this.currentMonth = 11;
+          this.currentYear--;
+        }
+        this.renderCalendar();
+      });
+      
+      document.getElementById('nextMonth').addEventListener('click', () => {
+        this.currentMonth++;
+        if (this.currentMonth > 11) {
+          this.currentMonth = 0;
+          this.currentYear++;
+        }
+        this.renderCalendar();
+      });
+      
+      // Select dropdowns
+      document.getElementById('monthSelect').addEventListener('change', (e) => {
+        this.currentMonth = parseInt(e.target.value);
+        this.renderCalendar();
+      });
+      
+      document.getElementById('yearSelect').addEventListener('change', (e) => {
+        this.currentYear = parseInt(e.target.value);
+        this.renderCalendar();
+      });
+      
+      // Day selection
+      this.calendarContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('seup-calendar-day') && !e.target.disabled) {
-          this.selectDate(e.target.dataset.date);
-        }
-        
-        if (e.target.closest('[data-action="today"]')) {
-          this.selectDate(this.formatDate(new Date()));
-        }
-        
-        if (e.target.closest('[data-action="clear"]')) {
-          this.input.value = '';
-          this.selectedDate = null;
-          this.hide();
-        }
-        
-        if (e.target.closest('[data-action="prev-month"]')) {
-          this.currentMonth--;
-          if (this.currentMonth < 0) {
-            this.currentMonth = 11;
-            this.currentYear--;
-          }
-          this.renderCalendar();
-        }
-        
-        if (e.target.closest('[data-action="next-month"]')) {
-          this.currentMonth++;
-          if (this.currentMonth > 11) {
-            this.currentMonth = 0;
-            this.currentYear++;
-          }
-          this.renderCalendar();
-        }
-        
-        if (e.target.closest('[data-action="change-month"]')) {
-          this.currentMonth = parseInt(e.target.value);
-          this.renderCalendar();
-        }
-        
-        if (e.target.closest('[data-action="change-year"]')) {
-          this.currentYear = parseInt(e.target.value);
-          this.renderCalendar();
+          // Remove previous selection
+          this.calendarContainer.querySelectorAll('.seup-calendar-day').forEach(day => {
+            day.classList.remove('selected');
+          });
+          
+          // Add selection to clicked day
+          e.target.classList.add('selected');
+          this.selectedDate = this.parseDate(e.target.dataset.date);
         }
       });
     }
     
-    selectDate(dateStr) {
-      this.input.value = dateStr;
-      this.selectedDate = dateStr;
+    selectToday() {
+      this.selectedDate = new Date(this.today);
+      this.currentMonth = this.today.getMonth();
+      this.currentYear = this.today.getFullYear();
+      this.renderCalendar();
+    }
+    
+    clearDate() {
+      this.selectedDate = null;
+      if (this.currentInput) {
+        this.currentInput.value = '';
+      }
       this.hide();
-      
-      // Trigger change event
-      this.input.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      // Add visual feedback
-      this.input.style.borderColor = 'var(--seup-success)';
-      setTimeout(() => {
-        this.input.style.borderColor = '';
-      }, 1000);
+    }
+    
+    confirmSelection() {
+      if (this.selectedDate && this.currentInput) {
+        this.currentInput.value = this.formatDate(this.selectedDate);
+        
+        // Add visual feedback
+        this.currentInput.style.borderColor = 'var(--seup-success)';
+        this.currentInput.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+        
+        setTimeout(() => {
+          this.currentInput.style.borderColor = '';
+          this.currentInput.style.boxShadow = '';
+        }, 1500);
+      }
+      this.hide();
+    }
+    
+    formatDate(date) {
+      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+    }
+    
+    parseDate(dateStr) {
+      const parts = dateStr.split('.');
+      return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    }
+    
+    isSameDay(date1, date2) {
+      return date1.getDate() === date2.getDate() &&
+             date1.getMonth() === date2.getMonth() &&
+             date1.getFullYear() === date2.getFullYear();
     }
   }
   
   document.addEventListener("DOMContentLoaded", function() {
-    // Initialize custom date pickers
-    document.querySelectorAll('.seup-date-picker').forEach(picker => {
-      new SEUPDatePicker(picker);
-    });
+    // Initialize popup date picker
+    window.datePickerInstance = new SEUPPopupDatePicker();
     
     // Get the select elements and klasa value element
     const dataHolder = document.getElementById("phpDataHolder");
