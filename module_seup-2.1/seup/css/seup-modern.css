@@ -660,9 +660,13 @@ body {
   padding: var(--seup-space-2) var(--seup-space-3);
   background: var(--seup-primary-100);
   color: var(--seup-primary-700);
+  border: 1px solid var(--seup-primary-200);
   border-radius: var(--seup-radius);
   font-size: 0.75rem;
   font-weight: 500;
+  transition: var(--seup-transition);
+  transform: scale(0.95);
+  opacity: 0.9;
 }
 
 .seup-tag-removable {
@@ -672,16 +676,98 @@ body {
 .seup-tag-remove {
   background: none;
   border: none;
-  color: var(--seup-primary-600);
+  color: inherit;
   cursor: pointer;
   padding: var(--seup-space-1);
   border-radius: var(--seup-radius-sm);
   transition: var(--seup-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
 }
 
 .seup-tag-remove:hover {
-  background: var(--seup-primary-200);
-  color: var(--seup-primary-800);
+  background: rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Available tags container */
+.available-tags-container {
+  padding: var(--seup-space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--seup-space-2);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Selected tags container */
+.selected-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--seup-space-2);
+  min-height: 50px;
+  padding: var(--seup-space-3);
+  border: 2px dashed var(--seup-gray-300);
+  border-radius: var(--seup-radius);
+  background: var(--seup-gray-50);
+  transition: var(--seup-transition);
+  align-items: center;
+}
+
+.selected-tags-container:hover {
+  border-color: var(--seup-primary-300);
+  background: var(--seup-primary-25);
+}
+
+/* Tag option styles */
+.tag-option {
+  background: white !important;
+  border: 1px solid var(--seup-gray-300) !important;
+  color: var(--seup-gray-700) !important;
+  padding: var(--seup-space-2) var(--seup-space-3) !important;
+  border-radius: var(--seup-radius) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  transition: var(--seup-transition) !important;
+  cursor: pointer !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.tag-option:hover {
+  background: var(--seup-primary-50) !important;
+  border-color: var(--seup-primary-300) !important;
+  color: var(--seup-primary-700) !important;
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+.tag-option.active {
+  background: var(--seup-primary-600) !important;
+  border-color: var(--seup-primary-600) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+/* Tag color variants */
+.seup-tag-blue { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+.seup-tag-purple { background: #f3e8ff; color: #7c3aed; border-color: #8b5cf6; }
+.seup-tag-green { background: #dcfce7; color: #16a34a; border-color: #22c55e; }
+.seup-tag-orange { background: #fed7aa; color: #ea580c; border-color: #f97316; }
+.seup-tag-pink { background: #fce7f3; color: #db2777; border-color: #ec4899; }
+.seup-tag-teal { background: #ccfbf1; color: #0d9488; border-color: #14b8a6; }
+.seup-tag-amber { background: #fef3c7; color: #d97706; border-color: #f59e0b; }
+.seup-tag-indigo { background: #e0e7ff; color: #4f46e5; border-color: #6366f1; }
+.seup-tag-red { background: #fecaca; color: #dc2626; border-color: #ef4444; }
+.seup-tag-emerald { background: #d1fae5; color: #059669; border-color: #10b981; }
+.seup-tag-sky { background: #e0f2fe; color: #0284c7; border-color: #0ea5e9; }
+.seup-tag-yellow { background: #fef7cd; color: #ca8a04; border-color: #eab308; }
 }
 
 /* Loading States */
@@ -983,4 +1069,235 @@ body {
     box-shadow: none;
     border: 1px solid var(--seup-gray-300);
   }
+}
+
+/* Custom Date Picker Styles */
+.seup-date-picker {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.seup-date-input {
+  padding-right: var(--seup-space-10) !important;
+  cursor: pointer;
+  transition: var(--seup-transition);
+}
+
+.seup-date-icon {
+  position: absolute;
+  right: var(--seup-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--seup-gray-400);
+  cursor: pointer;
+  transition: var(--seup-transition);
+  font-size: 1rem;
+}
+
+.seup-date-icon:hover {
+  color: var(--seup-primary-600);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.seup-calendar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--seup-gray-200);
+  border-radius: var(--seup-radius);
+  box-shadow: var(--seup-shadow-lg);
+  z-index: 1000;
+  margin-top: var(--seup-space-1);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: var(--seup-transition);
+}
+
+.seup-calendar.seup-fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.seup-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--seup-space-3);
+  background: var(--seup-primary-600);
+  color: white;
+}
+
+.seup-calendar-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.seup-calendar-nav {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: var(--seup-space-2);
+  border-radius: var(--seup-radius-sm);
+  transition: var(--seup-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.seup-calendar-nav:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.seup-calendar-grid {
+  padding: var(--seup-space-3);
+}
+
+.seup-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--seup-space-1);
+  margin-bottom: var(--seup-space-2);
+}
+
+.seup-calendar-weekdays span {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--seup-gray-600);
+  padding: var(--seup-space-2);
+  user-select: none;
+}
+
+.seup-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--seup-space-1);
+}
+
+.seup-calendar-day {
+  background: none;
+  border: none;
+  padding: var(--seup-space-2);
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--seup-radius-sm);
+  transition: var(--seup-transition);
+  font-size: 0.875rem;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  position: relative;
+}
+
+.seup-calendar-day:hover {
+  background: var(--seup-primary-100);
+  color: var(--seup-primary-700);
+  transform: scale(1.05);
+}
+
+.seup-calendar-day.today {
+  background: var(--seup-primary-600);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--seup-shadow);
+}
+
+.seup-calendar-day.today:hover {
+  background: var(--seup-primary-700);
+  color: white;
+}
+
+.seup-calendar-day.selected {
+  background: var(--seup-success);
+  color: white;
+  font-weight: 600;
+}
+
+.seup-calendar-day.selected:hover {
+  background: #059669;
+  color: white;
+}
+
+.seup-calendar-day.past {
+  color: var(--seup-gray-400);
+  background: var(--seup-gray-50);
+}
+
+.seup-calendar-day.other-month {
+  color: var(--seup-gray-300);
+  cursor: not-allowed;
+}
+
+.seup-calendar-day.other-month:hover {
+  background: none;
+  color: var(--seup-gray-300);
+  transform: none;
+}
+
+.seup-calendar-day:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.seup-calendar-day:disabled:hover {
+  background: none;
+  transform: none;
+}
+
+.seup-calendar-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--seup-space-3);
+  border-top: 1px solid var(--seup-gray-200);
+  background: var(--seup-gray-50);
+}
+
+/* Enhanced Tag Styles */
+.tag-option {
+  transition: var(--seup-transition) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.tag-option:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+.tag-option.active {
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+/* Selected tags container enhancement */
+#selected-tags:empty::before {
+  content: "Odabrane oznake će se prikazati ovdje";
+  color: var(--seup-gray-500);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+/* Tag hover effects */
+.seup-tag-removable:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+.seup-tag-remove:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  transform: scale(1.1);
 }

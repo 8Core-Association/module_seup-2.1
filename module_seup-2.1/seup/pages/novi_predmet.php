@@ -172,13 +172,21 @@ Predmet_helper::fetchDropdownData($db, $langs, $klasaOptions, $klasaMapJson, $za
 print '<meta name="viewport" content="width=device-width, initial-scale=1">';
 print '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">';
 print '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
-print '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">';
 print '<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />';
 print '<link href="/custom/seup/css/seup-modern.css" rel="stylesheet">';
 
-// Create modern date inputs
-$strankaDateHTML = '<input type="text" class="seup-input flatpickr-date" name="strankaDatumOtvaranja" placeholder="Odaberi datum">';
-$datumOtvaranjaHTML = '<input type="text" class="seup-input flatpickr-date" name="datumOtvaranja" placeholder="Odaberi datum">';
+// Create modern date inputs with custom date picker
+$strankaDateHTML = '<div class="seup-date-picker">
+    <input type="text" class="seup-input seup-date-input" name="strankaDatumOtvaranja" placeholder="dd.mm.yyyy" readonly>
+    <i class="fas fa-calendar-alt seup-date-icon"></i>
+    <div class="seup-calendar" style="display: none;"></div>
+</div>';
+
+$datumOtvaranjaHTML = '<div class="seup-date-picker">
+    <input type="text" class="seup-input seup-date-input" name="datumOtvaranja" placeholder="dd.mm.yyyy" readonly>
+    <i class="fas fa-calendar-alt seup-date-icon"></i>
+    <div class="seup-calendar" style="display: none;"></div>
+</div>';
 
 // Page Header
 print '<div class="seup-page-header">';
@@ -287,11 +295,11 @@ $htmlContent = <<<HTML
                         <div class="seup-flex seup-gap-2" style="margin-bottom: var(--seup-space-3);">
                             <div class="seup-dropdown" style="flex: 1;">
                                 <button class="seup-btn seup-btn-secondary" type="button" id="tagsDropdown" style="width: 100%; justify-content: space-between;">
-                                    Odaberi oznake
+                                    <span>Odaberi oznake</span>
                                     <i class="fas fa-chevron-down"></i>
                                 </button>
                                 <div class="seup-dropdown-menu" id="tags-dropdown-menu" style="display: none;">
-                                    <div style="padding: var(--seup-space-3); display: flex; flex-wrap: wrap; gap: var(--seup-space-2);" id="available-tags">
+                                    <div class="available-tags-container" id="available-tags">
                                         {$availableTagsHTML}
                                     </div>
                                 </div>
@@ -300,7 +308,9 @@ $htmlContent = <<<HTML
                                 <i class="fas fa-plus"></i> Dodaj
                             </button>
                         </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: var(--seup-space-2);" id="selected-tags"></div>
+                        <div class="selected-tags-container" id="selected-tags">
+                            <span class="seup-text-small" style="color: var(--seup-gray-500); align-self: center;" id="tags-placeholder">Odabrane oznake će se prikazati ovdje</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -325,8 +335,11 @@ print $htmlContent;
 
 // Ne diraj dalje ispod ništa ne mjenjaj dole je samo bootstrap cdn java scripta i dolibarr footer postavke kao što vidiš//
 
-// Bootstrap JS bundle (uključuje Popper)
-print '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>';
+// Load required JavaScript libraries
+print '<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>';
+print '<script src="/custom/seup/js/seup-modern.js"></script>';
+print '<script src="/custom/seup/js/seup-enhanced.js"></script>';
+
 // End of page
 llxFooter();
 $db->close();
@@ -341,7 +354,178 @@ $db->close();
     }
   });
 
+  // Enhanced Date Picker Implementation
+  class SEUPDatePicker {
+    constructor(container) {
+      this.container = container;
+      this.input = container.querySelector('.seup-date-input');
+      this.calendar = container.querySelector('.seup-calendar');
+      this.icon = container.querySelector('.seup-date-icon');
+      this.selectedDate = null;
+      this.currentMonth = new Date().getMonth();
+      this.currentYear = new Date().getFullYear();
+      
+      this.init();
+    }
+    
+    init() {
+      this.input.addEventListener('click', () => this.show());
+      this.icon.addEventListener('click', () => this.show());
+      
+      document.addEventListener('click', (e) => {
+        if (!this.container.contains(e.target)) {
+          this.hide();
+        }
+      });
+      
+      // Keyboard navigation
+      this.input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.show();
+        }
+        if (e.key === 'Escape') {
+          this.hide();
+        }
+      });
+    }
+    
+    show() {
+      this.calendar.style.display = 'block';
+      this.calendar.classList.add('seup-fade-in');
+      this.renderCalendar();
+    }
+    
+    hide() {
+      this.calendar.style.display = 'none';
+      this.calendar.classList.remove('seup-fade-in');
+    }
+    
+    renderCalendar() {
+      const year = this.currentYear;
+      const month = this.currentMonth;
+      
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+      
+      const monthNames = [
+        'Siječanj', 'Veljača', 'Ožujak', 'Travanj', 'Svibanj', 'Lipanj',
+        'Srpanj', 'Kolovoz', 'Rujan', 'Listopad', 'Studeni', 'Prosinac'
+      ];
+      
+      const today = new Date();
+      
+      let html = `
+        <div class="seup-calendar-header">
+          <button type="button" class="seup-calendar-nav" data-action="prev-month">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <span class="seup-calendar-title">${monthNames[month]} ${year}</span>
+          <button type="button" class="seup-calendar-nav" data-action="next-month">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="seup-calendar-grid">
+          <div class="seup-calendar-weekdays">
+            <span>Pon</span><span>Uto</span><span>Sri</span><span>Čet</span><span>Pet</span><span>Sub</span><span>Ned</span>
+          </div>
+          <div class="seup-calendar-days">
+      `;
+      
+      for (let i = 0; i < 42; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        
+        const isCurrentMonth = date.getMonth() === month;
+        const isToday = date.toDateString() === now.toDateString();
+        const isSelected = this.selectedDate && this.selectedDate === this.formatDate(date);
+        const isPast = date < today && !isToday;
+        let dayClass = `seup-calendar-day`;
+        if (!isCurrentMonth) dayClass += ' other-month';
+        if (isToday) dayClass += ' today';
+        if (isSelected) dayClass += ' selected';
+        if (isPast) dayClass += ' past';
+        
+        const formattedDate = this.formatDate(date);
+        html += `<button type="button" class="${dayClass}" data-date="${formattedDate}" ${!isCurrentMonth ? 'disabled' : ''}>${date.getDate()}</button>`;
+      }
+      
+      html += `
+          </div>
+        </div>
+        <div class="seup-calendar-footer">
+          <button type="button" class="seup-btn seup-btn-sm seup-btn-secondary" data-action="today">Danas</button>
+          <button type="button" class="seup-btn seup-btn-sm seup-btn-secondary" data-action="clear">Očisti</button>
+        </div>
+      `;
+      
+      this.calendar.innerHTML = html;
+      this.attachCalendarEvents();
+    }
+    
+    formatDate(date) {
+      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+    }
+    
+    attachCalendarEvents() {
+      this.calendar.addEventListener('click', (e) => {
+        if (e.target.classList.contains('seup-calendar-day') && !e.target.disabled) {
+          this.selectDate(e.target.dataset.date);
+        }
+        
+        if (e.target.closest('[data-action="today"]')) {
+          this.selectDate(this.formatDate(new Date()));
+        }
+        
+        if (e.target.closest('[data-action="clear"]')) {
+          this.input.value = '';
+          this.selectedDate = null;
+          this.hide();
+        }
+        
+        if (e.target.closest('[data-action="prev-month"]')) {
+          this.currentMonth--;
+          if (this.currentMonth < 0) {
+            this.currentMonth = 11;
+            this.currentYear--;
+          }
+          this.renderCalendar();
+        }
+        
+        if (e.target.closest('[data-action="next-month"]')) {
+          this.currentMonth++;
+          if (this.currentMonth > 11) {
+            this.currentMonth = 0;
+            this.currentYear++;
+          }
+          this.renderCalendar();
+        }
+      });
+    }
+    
+    selectDate(dateStr) {
+      this.input.value = dateStr;
+      this.selectedDate = dateStr;
+      this.hide();
+      
+      // Trigger change event
+      this.input.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      // Add visual feedback
+      this.input.style.borderColor = 'var(--seup-success)';
+      setTimeout(() => {
+        this.input.style.borderColor = '';
+      }, 1000);
+    }
+  }
   document.addEventListener("DOMContentLoaded", function() {
+    // Initialize custom date pickers
+    document.querySelectorAll('.seup-date-picker').forEach(picker => {
+      new SEUPDatePicker(picker);
+    });
+    
     // Get the select elements and klasa value element
     const dataHolder = document.getElementById("phpDataHolder");
     const klasaMap = JSON.parse('<?php echo $klasaMapJson; ?>');
@@ -352,22 +536,6 @@ $db->close();
     var zaposlenikSelect = document.getElementById("zaposlenik");
     var klasaValue = document.getElementById("klasa-value");
     const otvoriPredmetBtn = document.getElementById("otvoriPredmetBtn");
-
-    // Stranka autocomplete functionality
-    const strankaInput = document.getElementById('stranka');
-    const strankaResults = document.getElementById('stranka-results');
-    let lastSearchTerm = '';
-
-    jQuery(document).ready(function() {
-      // Initialize flatpickr
-      flatpickr('.flatpickr-date', {
-        dateFormat: "d.m.Y",
-        locale: "hr",
-        allowInput: true,
-        static: true
-      });
-    });
-
 
     /****************************************/
     /* Stranka autocomplete funkcionalnost  */
@@ -843,26 +1011,61 @@ $db->close();
 
   // Tag selection functionality
   const tagsDropdown = document.getElementById("tagsDropdown");
+  const tagsDropdownMenu = document.getElementById("tags-dropdown-menu");
   const availableTags = document.getElementById("available-tags");
   const addTagBtn = document.getElementById("add-tag-btn");
   const selectedTagsContainer = document.getElementById("selected-tags");
+  const tagsPlaceholder = document.getElementById("tags-placeholder");
   const selectedTags = new Set();
+  
+  // Enhanced tag colors array with more variety
+  const tagColors = [
+    { bg: '#dbeafe', text: '#1e40af', border: '#3b82f6', name: 'blue' },
+    { bg: '#f3e8ff', text: '#7c3aed', border: '#8b5cf6', name: 'purple' },
+    { bg: '#dcfce7', text: '#16a34a', border: '#22c55e', name: 'green' },
+    { bg: '#fed7aa', text: '#ea580c', border: '#f97316', name: 'orange' },
+    { bg: '#fce7f3', text: '#db2777', border: '#ec4899', name: 'pink' },
+    { bg: '#ccfbf1', text: '#0d9488', border: '#14b8a6', name: 'teal' },
+    { bg: '#fef3c7', text: '#d97706', border: '#f59e0b', name: 'amber' },
+    { bg: '#e0e7ff', text: '#4f46e5', border: '#6366f1', name: 'indigo' },
+    { bg: '#fecaca', text: '#dc2626', border: '#ef4444', name: 'red' },
+    { bg: '#d1fae5', text: '#059669', border: '#10b981', name: 'emerald' },
+    { bg: '#e0f2fe', text: '#0284c7', border: '#0ea5e9', name: 'sky' },
+    { bg: '#fef7cd', text: '#ca8a04', border: '#eab308', name: 'yellow' }
+  ];
+  
+  let colorIndex = 0;
 
   // Track selected option
   let selectedOption = null;
 
-  // Make tag options selectable
   // Enhanced dropdown functionality
   tagsDropdown.addEventListener("click", function(e) {
     e.preventDefault();
-    const menu = document.getElementById("tags-dropdown-menu");
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    const isOpen = tagsDropdownMenu.style.display === 'block';
+    tagsDropdownMenu.style.display = isOpen ? 'none' : 'block';
+    
+    // Animate dropdown
+    if (!isOpen) {
+      tagsDropdownMenu.style.opacity = '0';
+      tagsDropdownMenu.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        tagsDropdownMenu.style.opacity = '1';
+        tagsDropdownMenu.style.transform = 'translateY(0)';
+      }, 10);
+    }
+    
+    // Update chevron icon
+    const chevron = tagsDropdown.querySelector('.fas');
+    chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
   });
 
   // Close dropdown when clicking outside
   document.addEventListener("click", function(e) {
     if (!e.target.closest('.seup-dropdown')) {
-      document.getElementById("tags-dropdown-menu").style.display = 'none';
+      tagsDropdownMenu.style.display = 'none';
+      const chevron = tagsDropdown.querySelector('.fas');
+      chevron.style.transform = 'rotate(0deg)';
     }
   });
 
@@ -870,20 +1073,18 @@ $db->close();
     if (e.target.classList.contains("tag-option")) {
       // Remove active class from all options
       document.querySelectorAll('.tag-option').forEach(btn => {
-        btn.classList.remove('seup-btn-primary');
-        btn.classList.add('seup-btn-secondary');
+        btn.classList.remove('active');
       });
 
       // Set active class on clicked option
-      e.target.classList.remove('seup-btn-secondary');
-      e.target.classList.add('seup-btn-primary');
+      e.target.classList.add('active');
       selectedOption = e.target;
 
       // Update dropdown button text
-      tagsDropdown.innerHTML = `${e.target.textContent} <i class="fas fa-chevron-down"></i>`;
+      const buttonText = tagsDropdown.querySelector('span');
+      buttonText.textContent = e.target.textContent;
     }
   });
-
 
   // Add tag to selection
   addTagBtn.addEventListener("click", function() {
@@ -894,26 +1095,50 @@ $db->close();
 
     if (!selectedTags.has(tagId)) {
       selectedTags.add(tagId);
+      
+      // Hide placeholder if this is the first tag
+      if (tagsPlaceholder) {
+        tagsPlaceholder.style.display = 'none';
+      }
+      
+      // Get color for this tag
+      const color = tagColors[colorIndex % tagColors.length];
+      colorIndex++;
 
       // Create selected tag badge
       const tagElement = document.createElement("div");
-      tagElement.className = "seup-tag seup-tag-removable";
+      tagElement.className = `seup-tag seup-tag-removable seup-tag-${color.name} seup-fade-in`;
       tagElement.dataset.tagId = tagId;
+      tagElement.style.background = color.bg;
+      tagElement.style.color = color.text;
+      tagElement.style.borderColor = color.border;
+      
       tagElement.innerHTML = `
-            ${tagName}
-            <button type="button" class="seup-tag-remove" aria-label="Remove">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+        <i class="fas fa-tag"></i>
+        <span class="tag-text">${tagName}</span>
+        <button type="button" class="seup-tag-remove" aria-label="Remove">
+          <i class="fas fa-times" style="font-size: 0.7rem;"></i>
+        </button>
+      `;
 
       selectedTagsContainer.appendChild(tagElement);
+      
+      // Add entrance animation
+      setTimeout(() => {
+        tagElement.style.transform = 'scale(1)';
+        tagElement.style.opacity = '1';
+      }, 10);
 
       // Reset selection
-      selectedOption.classList.remove('seup-btn-primary');
-      selectedOption.classList.add('seup-btn-secondary');
+      selectedOption.classList.remove('active');
       selectedOption = null;
-      tagsDropdown.innerHTML = 'Odaberi oznake <i class="fas fa-chevron-down"></i>';
-      document.getElementById("tags-dropdown-menu").style.display = 'none';
+      
+      const buttonText = tagsDropdown.querySelector('span');
+      buttonText.textContent = 'Odaberi oznake';
+      tagsDropdownMenu.style.display = 'none';
+      
+      const chevron = tagsDropdown.querySelector('.fas');
+      chevron.style.transform = 'rotate(0deg)';
     }
   });
 
@@ -924,7 +1149,18 @@ $db->close();
       const tagId = tagElement.dataset.tagId;
 
       selectedTags.delete(tagId);
-      tagElement.remove();
+      
+      // Animate removal
+      tagElement.style.opacity = '0';
+      tagElement.style.transform = 'scale(0.8)';
+      setTimeout(() => {
+        tagElement.remove();
+        
+        // Show placeholder if no tags left
+        if (selectedTags.size === 0 && tagsPlaceholder) {
+          tagsPlaceholder.style.display = 'block';
+        }
+      }, 200);
     }
   });
   //TODO CHECK if documents in db actually exist
