@@ -79,8 +79,9 @@ $error = 0;
 $success = 0;
 $tag_name = '';
 
-if ($action == 'addtag' && !empty($_POST['tag'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action == 'addtag' && !empty($_POST['tag'])) {
     $tag_name = GETPOST('tag', 'alphanohtml');
+    $tag_color = GETPOST('tag_color', 'alpha') ?: 'blue';
 
     // Validate input
     if (dol_strlen($tag_name) < 2) {
@@ -90,9 +91,9 @@ if ($action == 'addtag' && !empty($_POST['tag'])) {
         $db->begin();
 
         // Check if tag already exists
-        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "a_tagovi";
-        $sql .= " WHERE tag = '" . $db->escape($tag_name) . "'";
-        $sql .= " AND entity = " . $conf->entity;
+        $sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "a_tagovi 
+                WHERE tag = '" . $db->escape($tag_name) . "' 
+                AND entity = " . ((int) $conf->entity);
 
         $resql = $db->query($sql);
         if ($resql) {
@@ -101,12 +102,14 @@ if ($action == 'addtag' && !empty($_POST['tag'])) {
                 setEventMessages($langs->trans('ErrorTagAlreadyExists'), null, 'errors');
             } else {
                 // Insert new tag
-                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_tagovi";
-                $sql .= " (tag, entity, date_creation, fk_user_creat)";
-                $sql .= " VALUES ('" . $db->escape($tag_name) . "',";
-                $sql .= " " . $conf->entity . ",";
-                $sql .= " '" . $db->idate(dol_now()) . "',";
-                $sql .= " " . $user->id . ")";
+                $sql = "INSERT INTO " . MAIN_DB_PREFIX . "a_tagovi 
+                        (tag, entity, date_creation, fk_user_creat) 
+                        VALUES (
+                            '" . $db->escape($tag_name) . "',
+                            " . ((int) $conf->entity) . ",
+                            '" . $db->idate(dol_now()) . "',
+                            " . ((int) $user->id) . "
+                        )";
 
                 $resql = $db->query($sql);
                 if ($resql) {
@@ -128,21 +131,21 @@ if ($action == 'addtag' && !empty($_POST['tag'])) {
     }
 }
 
-if ($action == 'deletetag') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action == 'deletetag') {
     $tagid = GETPOST('tagid', 'int');
     if ($tagid > 0) {
         $db->begin();
 
         // First delete associations in a_predmet_tagovi
-        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_predmet_tagovi";
-        $sql .= " WHERE fk_tag = " . $tagid;
+        $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_predmet_tagovi 
+                WHERE fk_tag = " . ((int) $tagid);
         $resql = $db->query($sql);
 
         if ($resql) {
             // Then delete the tag itself
-            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_tagovi";
-            $sql .= " WHERE rowid = " . $tagid;
-            $sql .= " AND entity = " . $conf->entity;
+            $sql = "DELETE FROM " . MAIN_DB_PREFIX . "a_tagovi 
+                    WHERE rowid = " . ((int) $tagid) . " 
+                    AND entity = " . ((int) $conf->entity);
 
             $resql = $db->query($sql);
             if ($resql) {
@@ -200,15 +203,15 @@ if ($resql_stats && $obj = $db->fetch_object($resql_stats)) {
     $total_tags = $obj->total_tags;
 }
 
-// Get usage statistics for tags
+// Get real usage statistics for tags
 $sql_usage = "SELECT 
-    t.rowid,
-    t.tag,
-    COUNT(pt.fk_predmet) as usage_count
-FROM " . MAIN_DB_PREFIX . "a_tagovi t
-LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
-WHERE t.entity = " . $conf->entity . "
-GROUP BY t.rowid, t.tag";
+                t.rowid,
+                t.tag,
+                COUNT(pt.fk_predmet) as usage_count
+              FROM " . MAIN_DB_PREFIX . "a_tagovi t
+              LEFT JOIN " . MAIN_DB_PREFIX . "a_predmet_tagovi pt ON t.rowid = pt.fk_tag
+              WHERE t.entity = " . ((int) $conf->entity) . "
+              GROUP BY t.rowid, t.tag";
 
 $resql_usage = $db->query($sql_usage);
 $tag_usage = [];
@@ -356,12 +359,15 @@ print '</div>';
 $sql = "SELECT t.rowid, t.tag, t.date_creation, t.fk_user_creat, u.firstname, u.lastname";
 $sql .= " FROM " . MAIN_DB_PREFIX . "a_tagovi";
 $sql .= " LEFT JOIN " . MAIN_DB_PREFIX . "user u ON t.fk_user_creat = u.rowid";
-$sql .= " WHERE entity = " . $conf->entity;
+$sql .= " WHERE t.entity = " . ((int) $conf->entity);
 $sql .= " ORDER BY date_creation DESC";
+
+dol_syslog("SQL za dohvaćanje tagova: " . $sql, LOG_DEBUG);
 
 $resql = $db->query($sql);
 if ($resql) {
     $num = $db->num_rows($resql);
+    dol_syslog("Broj pronađenih tagova: " . $num, LOG_DEBUG);
     $trans_confirm = $langs->trans('ConfirmDeleteTag');
 
     if ($num > 0) {
@@ -375,7 +381,15 @@ if ($resql) {
             
             // Get real usage count for this tag
             $usage_count = isset($tag_usage[$obj->rowid]) ? $tag_usage[$obj->rowid] : 0;
-            $usage_percentage = $total_tags > 0 ? min(($usage_count / max($total_tags, 1)) * 100, 100) : 0;
+            
+            // Calculate usage percentage based on total predmeti, not tags
+            $sql_total_predmeti = "SELECT COUNT(*) as total FROM " . MAIN_DB_PREFIX . "a_predmet";
+            $res_total = $db->query($sql_total_predmeti);
+            $total_predmeti = 1; // Default to 1 to avoid division by zero
+            if ($res_total && $obj_total = $db->fetch_object($res_total)) {
+                $total_predmeti = max($obj_total->total, 1);
+            }
+            $usage_percentage = ($usage_count / $total_predmeti) * 100;
             
             print '<div class="seup-tag-card seup-interactive seup-fade-in" data-tag="' . strtolower($obj->tag) . '">';
             print '<div class="seup-tag-card-header">';
@@ -418,7 +432,7 @@ if ($resql) {
             // Real usage stats
             print '<div class="seup-tag-usage">';
             print '<div class="seup-usage-bar">';
-            print '<div class="seup-usage-fill" style="width: ' . $usage_percentage . '%;"></div>';
+            print '<div class="seup-usage-fill" style="width: ' . min($usage_percentage, 100) . '%;"></div>';
             print '</div>';
             print '<span class="seup-usage-text">';
             if ($usage_count > 0) {
@@ -571,7 +585,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission with loading state
     const addTagForm = document.getElementById('addTagForm');
     if (addTagForm) {
-        addTagForm.addEventListener('submit', function() {
+        addTagForm.addEventListener('submit', function(e) {
+            const tagInput = document.getElementById('tag');
+            if (!tagInput || tagInput.value.trim().length < 2) {
+                e.preventDefault();
+                alert('Naziv oznake mora imati najmanje 2 znaka');
+                return false;
+            }
+            
             if (submitBtn && !submitBtn.disabled) {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Dodajem...</span>';
                 submitBtn.disabled = true;
