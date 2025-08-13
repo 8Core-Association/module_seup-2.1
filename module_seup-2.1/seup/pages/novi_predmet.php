@@ -294,22 +294,9 @@ $htmlContent = <<<HTML
                     
                     <div class="seup-form-group">
                         <label class="seup-label">{$langs->trans('Oznake')}</label>
-                        <div class="seup-flex seup-gap-2" style="margin-bottom: var(--seup-space-3);">
-                            <div class="seup-dropdown" style="flex: 1;">
-                                <button class="seup-btn seup-btn-secondary" type="button" id="tagsDropdown" style="width: 100%; justify-content: space-between;">
-                                    <span>Odaberi oznake</span>
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="seup-dropdown-menu" id="tags-dropdown-menu" style="display: none;">
-                                    <div class="available-tags-container" id="available-tags">
-                                        {$availableTagsHTML}
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="seup-btn seup-btn-primary" type="button" id="add-tag-btn">
-                                <i class="fas fa-plus"></i> Dodaj
-                            </button>
-                        </div>
+                        <button class="seup-btn seup-btn-primary" type="button" onclick="openTagsModal()" style="margin-bottom: var(--seup-space-3);">
+                            <i class="fas fa-tags"></i> Odaberi Oznake
+                        </button>
                         <div class="selected-tags-container" id="selected-tags">
                             <span class="seup-text-small" style="color: var(--seup-gray-500); align-self: center;" id="tags-placeholder">Odabrane oznake će se prikazati ovdje</span>
                         </div>
