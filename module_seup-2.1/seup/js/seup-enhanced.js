@@ -601,3 +601,280 @@ window.SEUPFormValidator = SEUPFormValidator;
 window.SEUPAutocomplete = SEUPAutocomplete;
 window.SEUPNotifications = SEUPNotifications;
 window.SEUPFileUpload = SEUPFileUpload;
+
+// Tags Modal Functionality
+class SEUPTagsModal {
+    constructor() {
+        this.selectedTags = new Set();
+        this.availableTags = [];
+        this.init();
+    }
+
+    init() {
+        this.createModal();
+        this.setupEventListeners();
+        this.loadAvailableTags();
+    }
+
+    createModal() {
+        const modalHTML = `
+            <div id="seupTagsModal" class="seup-tags-modal">
+                <div class="seup-tags-modal-content">
+                    <div class="seup-tags-modal-header">
+                        <h3 class="seup-tags-modal-title">
+                            <i class="fas fa-tags"></i>
+                            Odaberi Oznake
+                        </h3>
+                        <button class="seup-tags-modal-close" onclick="window.seupTagsModal.close()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="seup-tags-modal-body">
+                        <div class="seup-tags-search">
+                            <div style="position: relative;">
+                                <input type="text" class="seup-input" placeholder="Pretraži oznake..." id="tagsSearchInput">
+                                <i class="fas fa-search seup-tags-search-icon"></i>
+                            </div>
+                        </div>
+                        <div id="tagsGridContainer" class="seup-tags-grid-modal">
+                            <!-- Tags will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="seup-tags-modal-footer">
+                        <div class="seup-tags-count">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="selectedCount">0 odabrano</span>
+                        </div>
+                        <div class="seup-flex seup-gap-2">
+                            <button class="seup-btn seup-btn-secondary" onclick="window.seupTagsModal.close()">
+                                <i class="fas fa-times"></i> Odustani
+                            </button>
+                            <button class="seup-btn seup-btn-primary" onclick="window.seupTagsModal.confirm()">
+                                <i class="fas fa-check"></i> Potvrdi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    setupEventListeners() {
+        // Search functionality
+        const searchInput = document.getElementById('tagsSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filterTags(e.target.value);
+            });
+        }
+
+        // Close modal on overlay click
+        const modal = document.getElementById('seupTagsModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.close();
+                }
+            });
+        }
+
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                this.close();
+            }
+        });
+    }
+
+    async loadAvailableTags() {
+        try {
+            // Simulate loading tags - replace with actual AJAX call
+            this.availableTags = [
+                { id: 1, name: 'Hitno', color: 'red' },
+                { id: 2, name: 'Važno', color: 'orange' },
+                { id: 3, name: 'Interno', color: 'blue' },
+                { id: 4, name: 'Javno', color: 'green' },
+                { id: 5, name: 'Povjerljivo', color: 'purple' },
+                { id: 6, name: 'Arhiva', color: 'gray' }
+            ];
+            
+            this.renderTags();
+        } catch (error) {
+            console.error('Error loading tags:', error);
+        }
+    }
+
+    renderTags() {
+        const container = document.getElementById('tagsGridContainer');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        this.availableTags.forEach(tag => {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'seup-tag-option-modal';
+            tagElement.dataset.tagId = tag.id;
+            tagElement.innerHTML = `
+                <i class="fas fa-tag" style="color: var(--seup-${tag.color}, #3b82f6);"></i>
+                ${tag.name}
+            `;
+            
+            if (this.selectedTags.has(tag.id)) {
+                tagElement.classList.add('selected');
+            }
+            
+            tagElement.addEventListener('click', () => {
+                this.toggleTag(tag.id, tagElement);
+            });
+            
+            container.appendChild(tagElement);
+        });
+    }
+
+    toggleTag(tagId, element) {
+        if (this.selectedTags.has(tagId)) {
+            this.selectedTags.delete(tagId);
+            element.classList.remove('selected');
+        } else {
+            this.selectedTags.add(tagId);
+            element.classList.add('selected');
+        }
+        
+        this.updateSelectedCount();
+    }
+
+    updateSelectedCount() {
+        const countElement = document.getElementById('selectedCount');
+        if (countElement) {
+            const count = this.selectedTags.size;
+            countElement.textContent = `${count} odabrano`;
+        }
+    }
+
+    filterTags(searchTerm) {
+        const tagElements = document.querySelectorAll('.seup-tag-option-modal');
+        const term = searchTerm.toLowerCase();
+        
+        tagElements.forEach(element => {
+            const tagName = element.textContent.toLowerCase();
+            if (tagName.includes(term)) {
+                element.style.display = 'flex';
+            } else {
+                element.style.display = 'none';
+            }
+        });
+    }
+
+    open() {
+        const modal = document.getElementById('seupTagsModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus search input
+            setTimeout(() => {
+                const searchInput = document.getElementById('tagsSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }, 100);
+        }
+    }
+
+    close() {
+        const modal = document.getElementById('seupTagsModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+
+    confirm() {
+        // Update the display area with selected tags
+        this.updateSelectedTagsDisplay();
+        
+        // Update hidden form inputs
+        this.updateFormInputs();
+        
+        // Close modal
+        this.close();
+        
+        // Show success message
+        if (window.seupNotifications) {
+            const count = this.selectedTags.size;
+            window.seupNotifications.show(`Odabrano ${count} oznaka`, 'success', 3000);
+        }
+    }
+
+    updateSelectedTagsDisplay() {
+        const displayArea = document.getElementById('selectedTagsDisplay');
+        if (!displayArea) return;
+
+        displayArea.innerHTML = '';
+        
+        if (this.selectedTags.size === 0) {
+            displayArea.classList.add('empty');
+            return;
+        }
+        
+        displayArea.classList.remove('empty');
+        
+        this.selectedTags.forEach(tagId => {
+            const tag = this.availableTags.find(t => t.id === tagId);
+            if (tag) {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'seup-tag-selected';
+                tagElement.innerHTML = `
+                    <i class="fas fa-tag" style="color: var(--seup-${tag.color}, #3b82f6);"></i>
+                    ${tag.name}
+                    <button class="seup-tag-remove-btn" onclick="window.seupTagsModal.removeTag(${tag.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                displayArea.appendChild(tagElement);
+            }
+        });
+    }
+
+    updateFormInputs() {
+        // Remove existing hidden inputs
+        document.querySelectorAll('input[name="tags[]"]').forEach(input => {
+            input.remove();
+        });
+        
+        // Add new hidden inputs for selected tags
+        const form = document.querySelector('form');
+        if (form) {
+            this.selectedTags.forEach(tagId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tags[]';
+                input.value = tagId;
+                form.appendChild(input);
+            });
+        }
+    }
+
+    removeTag(tagId) {
+        this.selectedTags.delete(tagId);
+        this.updateSelectedTagsDisplay();
+        this.updateFormInputs();
+        this.updateSelectedCount();
+        
+        // Update modal if open
+        const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
+        if (tagElement) {
+            tagElement.classList.remove('selected');
+        }
+    }
+}
+
+// Initialize tags modal when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.seupTagsModal = new SEUPTagsModal();
+});
+
+// Export for global use
+window.SEUPTagsModal = SEUPTagsModal;

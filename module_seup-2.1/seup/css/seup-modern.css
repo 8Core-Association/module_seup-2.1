@@ -1876,6 +1876,239 @@ body {
   }
 }
 
+/* Tags Modal Specific Styles */
+.seup-tags-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: seup-modalFadeIn 0.3s ease-out;
+}
+
+.seup-tags-modal.show {
+  display: flex;
+}
+
+.seup-tags-modal-content {
+  background: white;
+  border-radius: var(--seup-radius-xl);
+  box-shadow: var(--seup-shadow-xl);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: seup-modalSlideIn 0.3s ease-out;
+  position: relative;
+  z-index: 100000;
+}
+
+.seup-tags-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--seup-space-4) var(--seup-space-6);
+  background: var(--seup-primary-600);
+  color: white;
+}
+
+.seup-tags-modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--seup-space-2);
+}
+
+.seup-tags-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: var(--seup-space-2);
+  border-radius: var(--seup-radius-sm);
+  transition: var(--seup-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.seup-tags-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.seup-tags-modal-body {
+  padding: var(--seup-space-6);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.seup-tags-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--seup-space-4) var(--seup-space-6);
+  background: var(--seup-gray-50);
+  border-top: 1px solid var(--seup-gray-200);
+}
+
+.seup-tags-grid-modal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--seup-space-3);
+}
+
+.seup-tag-option-modal {
+  background: white;
+  border: 2px solid var(--seup-gray-300);
+  color: var(--seup-gray-700);
+  padding: var(--seup-space-3) var(--seup-space-4);
+  border-radius: var(--seup-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--seup-transition);
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--seup-space-2);
+  min-height: 44px;
+}
+
+.seup-tag-option-modal:hover {
+  background: var(--seup-primary-50);
+  border-color: var(--seup-primary-400);
+  color: var(--seup-primary-700);
+  transform: translateY(-2px);
+  box-shadow: var(--seup-shadow-md);
+}
+
+.seup-tag-option-modal.selected {
+  background: var(--seup-primary-600);
+  border-color: var(--seup-primary-600);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--seup-shadow-lg);
+}
+
+.seup-tag-option-modal.selected:hover {
+  background: var(--seup-primary-700);
+  border-color: var(--seup-primary-700);
+}
+
+.seup-selected-tags-display {
+  background: var(--seup-gray-50);
+  border: 2px dashed var(--seup-gray-300);
+  border-radius: var(--seup-radius);
+  padding: var(--seup-space-4);
+  min-height: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--seup-space-2);
+  align-items: center;
+  transition: var(--seup-transition);
+}
+
+.seup-selected-tags-display:hover {
+  border-color: var(--seup-primary-300);
+  background: var(--seup-primary-25);
+}
+
+.seup-selected-tags-display.empty::after {
+  content: 'Kliknite "Odaberi Oznake" za dodavanje...';
+  color: var(--seup-gray-400);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+.seup-tag-selected {
+  background: var(--seup-primary-100);
+  color: var(--seup-primary-700);
+  border: 1px solid var(--seup-primary-300);
+  padding: var(--seup-space-2) var(--seup-space-3);
+  border-radius: var(--seup-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--seup-space-2);
+  animation: seup-fadeIn 0.3s ease-out;
+}
+
+.seup-tag-remove-btn {
+  background: none;
+  border: none;
+  color: var(--seup-primary-600);
+  cursor: pointer;
+  padding: var(--seup-space-1);
+  border-radius: var(--seup-radius-sm);
+  transition: var(--seup-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.seup-tag-remove-btn:hover {
+  background: var(--seup-primary-200);
+  color: var(--seup-primary-800);
+  transform: scale(1.1);
+}
+
+.seup-tags-search {
+  margin-bottom: var(--seup-space-4);
+}
+
+.seup-tags-search .seup-input {
+  padding-left: var(--seup-space-10);
+}
+
+.seup-tags-search-icon {
+  position: absolute;
+  left: var(--seup-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--seup-gray-400);
+  pointer-events: none;
+}
+
+.seup-tags-count {
+  font-size: 0.875rem;
+  color: var(--seup-gray-500);
+  display: flex;
+  align-items: center;
+  gap: var(--seup-space-2);
+}
+
+/* Mobile responsiveness for modal */
+@media (max-width: 768px) {
+  .seup-tags-modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .seup-tags-grid-modal {
+    grid-template-columns: 1fr;
+  }
+  
+  .seup-tags-modal-footer {
+    flex-direction: column;
+    gap: var(--seup-space-3);
+    align-items: stretch;
+  }
+}
 /* Enhanced Tag Styles */
 .tag-option {
   background: white !important;
