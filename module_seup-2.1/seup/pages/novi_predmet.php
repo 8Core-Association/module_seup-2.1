@@ -1132,6 +1132,35 @@ $db->close();
         });
     });
 
+    // Tags modal functionality
+    function openTagsModal() {
+        const modal = document.getElementById('tagsModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Focus search input
+            setTimeout(() => {
+                const searchInput = document.getElementById('tagsSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }, 100);
+        }
+    }
+
+    function closeTagsModal() {
+        const modal = document.getElementById('tagsModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Make functions global so HTML onclick can access them
+    window.openTagsModal = openTagsModal;
+    window.closeTagsModal = closeTagsModal;
+
     // Update on zaposlenik change
     if (zaposlenikSelect) {
       zaposlenikSelect.addEventListener("change", function() {
