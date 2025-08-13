@@ -696,7 +696,7 @@ body {
 /* Dropdown Enhancements */
 .seup-dropdown {
   position: relative;
-  z-index: 999999;
+  z-index: 1000;
 }
 
 .seup-dropdown-menu {
@@ -708,7 +708,7 @@ body {
   border: 1px solid var(--seup-gray-200);
   border-radius: var(--seup-radius);
   box-shadow: var(--seup-shadow-lg);
-  z-index: 999999;
+  z-index: 9999;
   max-height: 200px;
   overflow-y: auto;
   margin-top: var(--seup-space-1);
@@ -785,7 +785,7 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 999999;
+  z-index: 9999;
   background: white;
   border: 1px solid var(--seup-gray-200);
   border-radius: var(--seup-radius);
@@ -814,32 +814,31 @@ body {
 
 /* Tag option styles */
 .tag-option {
-  background: white !important;
-  border: 1px solid var(--seup-gray-300) !important;
-  color: var(--seup-gray-700) !important;
-  padding: var(--seup-space-2) var(--seup-space-3) !important;
-  border-radius: var(--seup-radius) !important;
-  font-size: 0.75rem !important;
-  font-weight: 500 !important;
-  transition: var(--seup-transition) !important;
-  cursor: pointer !important;
+  background: white;
+  border: 1px solid var(--seup-gray-300);
+  color: var(--seup-gray-700);
+  padding: var(--seup-space-2) var(--seup-space-3);
+  border-radius: var(--seup-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: var(--seup-transition);
+  cursor: pointer;
   position: relative;
   overflow: hidden;
-  z-index: 999999;
 }
 
 .tag-option:hover {
-  background: var(--seup-primary-50) !important;
-  border-color: var(--seup-primary-300) !important;
-  color: var(--seup-primary-700) !important;
+  background: var(--seup-primary-50);
+  border-color: var(--seup-primary-300);
+  color: var(--seup-primary-700);
   transform: translateY(-1px);
   box-shadow: var(--seup-shadow-md);
 }
 
 .tag-option.active {
-  background: var(--seup-primary-600) !important;
-  border-color: var(--seup-primary-600) !important;
-  color: white !important;
+  background: var(--seup-primary-600);
+  border-color: var(--seup-primary-600);
+  color: white;
   transform: translateY(-1px);
   box-shadow: var(--seup-shadow-md);
 }

@@ -45,7 +45,7 @@
 
 .autocomplete-dropdown {
   position: absolute;
-  z-index: 999999;
+  z-index: 9999;
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
@@ -183,7 +183,7 @@
 .ui-autocomplete,
 [class*="dropdown"],
 [id*="dropdown"] {
-  z-index: 999999 !important;
+  z-index: 9999;
 }
 
 /* Specific fixes for tags/oznake dropdowns */
@@ -191,8 +191,7 @@
 [id*="tag"][class*="dropdown"],
 [class*="oznake"][class*="dropdown"],
 [id*="oznake"][class*="dropdown"] {
-  z-index: 999999 !important;
-  position: relative !important;
+  z-index: 9999;
 }
 
 /* Enhanced animations */
