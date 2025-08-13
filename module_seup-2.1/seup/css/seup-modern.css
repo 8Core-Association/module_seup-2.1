@@ -280,59 +280,6 @@ body {
   font-size: 0.875rem;
   font-weight: 500;
 /* Tags dropdown specific fixes */
-.tags-dropdown-container {
-  position: relative;
-  z-index: 999999 !important;
-}
-
-.tags-dropdown-menu {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  right: 0 !important;
-  background: white !important;
-  border: 1px solid var(--seup-gray-200) !important;
-  border-radius: var(--seup-radius) !important;
-  box-shadow: var(--seup-shadow-xl) !important;
-  z-index: 999999 !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-  margin-top: var(--seup-space-1) !important;
-}
-
-.tags-dropdown-item {
-  padding: var(--seup-space-3) !important;
-  cursor: pointer !important;
-  transition: var(--seup-transition) !important;
-  border-bottom: 1px solid var(--seup-gray-100) !important;
-  z-index: 999999 !important;
-  position: relative !important;
-}
-
-.tags-dropdown-item:hover {
-  background: var(--seup-primary-50) !important;
-  color: var(--seup-primary-700) !important;
-}
-
-/* Force high z-index for any tag-related dropdowns */
-[class*="tag"] [class*="dropdown"],
-[id*="tag"] [class*="dropdown"],
-[class*="oznake"] [class*="dropdown"],
-[id*="oznake"] [class*="dropdown"] {
-  z-index: 999999 !important;
-  position: relative !important;
-}
-
-[class*="tag"] [class*="dropdown"] [class*="menu"],
-[id*="tag"] [class*="dropdown"] [class*="menu"],
-[class*="oznake"] [class*="dropdown"] [class*="menu"],
-[id*="oznake"] [class*="dropdown"] [class*="menu"] {
-  z-index: 999999 !important;
-  position: absolute !important;
-  background: white !important;
-  box-shadow: var(--seup-shadow-xl) !important;
-}
-
   color: var(--seup-gray-700);
   margin-bottom: var(--seup-space-2);
 }
@@ -708,7 +655,7 @@ body {
   border: 1px solid var(--seup-gray-200);
   border-radius: var(--seup-radius);
   box-shadow: var(--seup-shadow-lg);
-  z-index: 9999;
+  z-index: 10000;
   max-height: 200px;
   overflow-y: auto;
   margin-top: var(--seup-space-1);
@@ -785,7 +732,7 @@ body {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: 10000;
   background: white;
   border: 1px solid var(--seup-gray-200);
   border-radius: var(--seup-radius);
@@ -814,9 +761,9 @@ body {
 
 /* Tag option styles */
 .tag-option {
-  background: white;
-  border: 1px solid var(--seup-gray-300);
-  color: var(--seup-gray-700);
+  background: white !important;
+  border: 1px solid var(--seup-gray-300) !important;
+  color: var(--seup-gray-700) !important;
   padding: var(--seup-space-2) var(--seup-space-3);
   border-radius: var(--seup-radius);
   font-size: 0.75rem;

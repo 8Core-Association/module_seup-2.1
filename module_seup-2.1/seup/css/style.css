@@ -45,7 +45,7 @@
 
 .autocomplete-dropdown {
   position: absolute;
-  z-index: 9999;
+  z-index: 10000;
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
@@ -182,8 +182,12 @@
 .select2-dropdown,
 .ui-autocomplete,
 [class*="dropdown"],
-[id*="dropdown"] {
-  z-index: 9999;
+[id*="dropdown"],
+[class*="tags"],
+[id*="tags"],
+[class*="oznake"],
+[id*="oznake"] {
+  z-index: 10000 !important;
 }
 
 /* Specific fixes for tags/oznake dropdowns */
